@@ -1,0 +1,960 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1476</width>
+    <height>706</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>600</width>
+    <height>400</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="1" column="0">
+     <widget class="QwtPlot" name="qwtPlot">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="mouseTracking">
+       <bool>false</bool>
+      </property>
+      <property name="focusPolicy">
+       <enum>Qt::NoFocus</enum>
+      </property>
+      <property name="styleSheet">
+       <string notr="true"/>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Plain</enum>
+      </property>
+      <property name="lineWidth">
+       <number>0</number>
+      </property>
+      <property name="midLineWidth">
+       <number>0</number>
+      </property>
+      <property name="canvasBackground">
+       <brush brushstyle="SolidPattern">
+        <color alpha="255">
+         <red>34</red>
+         <green>34</green>
+         <blue>34</blue>
+        </color>
+       </brush>
+      </property>
+      <property name="autoReplot">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QGroupBox" name="groupBox">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QLCDNumber" name="lcdNumber">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>57</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>57</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Box</enum>
+         </property>
+         <property name="smallDecimalPoint">
+          <bool>false</bool>
+         </property>
+         <property name="digitCount">
+          <number>7</number>
+         </property>
+         <property name="segmentStyle">
+          <enum>QLCDNumber::Flat</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="run">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>137</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Run</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="save">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>Save</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_8">
+         <property name="text">
+          <string>Range [V]</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QCheckBox" name="range_fine">
+           <property name="minimumSize">
+            <size>
+             <width>59</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>59</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Fine</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="volt_range">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>0.500000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>5.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.500000000000000</double>
+           </property>
+           <property name="value">
+            <double>5.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_9">
+         <property name="text">
+          <string>Center[V]</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QCheckBox" name="center_range">
+           <property name="minimumSize">
+            <size>
+             <width>59</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>59</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Fine</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QDoubleSpinBox" name="center">
+           <property name="minimumSize">
+            <size>
+             <width>70</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>70</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="minimum">
+            <double>-5.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>5.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>0.500000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="reset_range">
+         <property name="maximumSize">
+          <size>
+           <width>137</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Range Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_2">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Sample</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QCheckBox" name="time_fine">
+           <property name="minimumSize">
+            <size>
+             <width>59</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>59</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string> Fine</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="time_range">
+           <property name="minimum">
+            <number>100</number>
+           </property>
+           <property name="maximum">
+            <number>5000</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_10">
+         <property name="text">
+          <string>Center</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <item>
+          <widget class="QCheckBox" name="time_center_fine">
+           <property name="minimumSize">
+            <size>
+             <width>59</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>59</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Fine</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+           <property name="tristate">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="time_center">
+           <property name="minimum">
+            <number>-5000</number>
+           </property>
+           <property name="maximum">
+            <number>5000</number>
+           </property>
+           <property name="singleStep">
+            <number>100</number>
+           </property>
+           <property name="value">
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QPushButton" name="samplereset">
+         <property name="text">
+          <string>Sample Reset</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSplitter" name="splitter">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <widget class="QLabel" name="label">
+          <property name="maximumSize">
+           <size>
+            <width>50</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>IP/Host</string>
+          </property>
+          <property name="buddy">
+           <cstring>Host</cstring>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="Host">
+          <property name="maximumSize">
+           <size>
+            <width>164</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="placeholderText">
+           <string>IP or Host name</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_2">
+          <property name="maximumSize">
+           <size>
+            <width>40</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Port</string>
+          </property>
+          <property name="buddy">
+           <cstring>Port</cstring>
+          </property>
+         </widget>
+         <widget class="QLineEdit" name="Port">
+          <property name="minimumSize">
+           <size>
+            <width>52</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>52</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>50000</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="Connect">
+          <property name="maximumSize">
+           <size>
+            <width>100</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Connect</string>
+          </property>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line_4">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_4">
+         <property name="maximumSize">
+          <size>
+           <width>69</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Rate(SPS)</string>
+         </property>
+         <property name="buddy">
+          <cstring>Rate</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="Rate">
+         <property name="maximumSize">
+          <size>
+           <width>100</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string>30kSPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>15kSPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>7.5kSPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>3.75kSPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2kSPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>1kSPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>500SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>100SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>60SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>50SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>30SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>25SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>15SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>10SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>5SPS</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2.5SPS</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_3">
+         <property name="maximumSize">
+          <size>
+           <width>65</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>PGA Gain</string>
+         </property>
+         <property name="buddy">
+          <cstring>PGA</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="PGA">
+         <property name="maximumSize">
+          <size>
+           <width>50</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string>1</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>4</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>8</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>16</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>32</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>64</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_5">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>IN+</string>
+         </property>
+         <property name="buddy">
+          <cstring>in_p</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="in_p">
+         <property name="maximumSize">
+          <size>
+           <width>75</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string>AIN0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN1</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN2</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN4</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN5</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN7</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AGND</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="label_6">
+         <property name="maximumSize">
+          <size>
+           <width>30</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>IN-</string>
+         </property>
+         <property name="buddy">
+          <cstring>in_n</cstring>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="in_n">
+         <property name="maximumSize">
+          <size>
+           <width>75</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="currentText">
+          <string>AIN0</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>AIN0</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN1</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN2</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN4</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN5</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN6</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AIN7</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>AGND</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="analogbuffer">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>123</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Analog buffer</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="sinc">
+         <property name="minimumSize">
+          <size>
+           <width>59</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>59</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Sinc</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="mode">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>115</width>
+           <height>0</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string>Raw</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Resampling</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>FFT</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="config">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>137</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Config</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>69</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <action name="actiontest1">
+   <property name="text">
+    <string>test1</string>
+   </property>
+  </action>
+  <action name="actiontest2">
+   <property name="text">
+    <string>test2</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QwtPlot</class>
+   <extends>QFrame</extends>
+   <header>qwt_plot.h</header>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>Host</tabstop>
+  <tabstop>Port</tabstop>
+  <tabstop>Connect</tabstop>
+  <tabstop>Rate</tabstop>
+  <tabstop>PGA</tabstop>
+  <tabstop>in_p</tabstop>
+  <tabstop>in_n</tabstop>
+  <tabstop>analogbuffer</tabstop>
+  <tabstop>sinc</tabstop>
+  <tabstop>config</tabstop>
+  <tabstop>run</tabstop>
+  <tabstop>save</tabstop>
+  <tabstop>range_fine</tabstop>
+  <tabstop>volt_range</tabstop>
+  <tabstop>center_range</tabstop>
+  <tabstop>center</tabstop>
+  <tabstop>reset_range</tabstop>
+  <tabstop>time_fine</tabstop>
+  <tabstop>time_range</tabstop>
+  <tabstop>time_center_fine</tabstop>
+  <tabstop>time_center</tabstop>
+  <tabstop>samplereset</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
