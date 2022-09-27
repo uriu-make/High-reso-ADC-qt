@@ -69,8 +69,13 @@ struct COMMAND {
   uint8_t kill = 0;
 };
 
-int open_socket(const char *hostname, int Port);
+struct read_data {
+  double volt;
+  uint64_t t;
+};
 
+int open_socket(const char *hostname, int Port);
+int kill(int fd);
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -91,7 +96,7 @@ class MainWindow : public QMainWindow {
   QwtPlotCurve *curve;
   Ui::MainWindow *ui;
   void timerEvent(QTimerEvent *);
-  static constexpr int plotDataSize = 10000;
+  static constexpr int plotDataSize = 50000;
   static constexpr double gain = 1;
 
   // layout elements from Qt itself http://qt-project.org/doc/qt-4.8/classes.html
@@ -150,6 +155,7 @@ class MainWindow : public QMainWindow {
   uint8_t mode_list[3] = {0};
 
   struct COMMAND com;
+  // struct read_data data[plotDataSize];
 
  private slots:
   void run();

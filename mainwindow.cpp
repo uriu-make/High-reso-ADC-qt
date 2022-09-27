@@ -31,8 +31,8 @@ MainWindow::MainWindow(QWidget *parent)
   ui->qwtPlot->setAxisTitle(0, tr("volt"));
   ui->qwtPlot->setAxisTitle(2, tr("time"));
   //  ui->qwtPlot->setAxis
-  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
-  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
+  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
 
   ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
   QPalette palette = ui->lcdNumber->palette();
@@ -66,16 +66,25 @@ MainWindow::~MainWindow() {
 void MainWindow::timerEvent(QTimerEvent *) {
   double inVal = 3.3 + 0.01 * gain * sin(M_PI * count / 10);
   ++count;
-
+  int len;
+  struct read_data buf[10000];
+  len = read(sock, buf, sizeof(buf));
+  len = len / sizeof(read_data);
+  // std::cout << len << std::endl;
   // add the new input to the plot
   // std::move(yData + 1, yData + plotDataSize - 1, yData);
-  std::rotate(yData, yData + 1, yData + plotDataSize);
-  for (int i = 0; i < plotDataSize; i++) {
-    xData[i] = i - t_center + 1;
+  std::rotate(xData, xData + len, xData + plotDataSize);
+  std::rotate(yData, yData + len, yData + plotDataSize);
+
+  for (int i = 0; i < len; i++) {
+    yData[plotDataSize - len + i] = buf[i].volt;
+    xData[plotDataSize - len + i] = buf[i].t;
   }
 
-  yData[plotDataSize - 1] = inVal;
-  // xData[0] = count;
+  for (int i = 0; i < plotDataSize; i++) {
+    xData[i] = xData[i] - xData[plotDataSize / 2];
+  }
+
   curve->setSamples(xData, yData, plotDataSize);
   ui->qwtPlot->replot();
   ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, plotDataSize - 1)]);
@@ -146,11 +155,16 @@ void MainWindow::run() {
       xData[index] = index;
       yData[index] = 0;
     }
+    com.kill = 0;
+    com.run = 1;
+    write(sock, &com, sizeof(com));
     timerID = this->startTimer(0);
   } else {
     ui->save->setEnabled(true);
     ui->config->setEnabled(true);
     ui->Connect->setEnabled(true);
+    com.run = 0;
+    write(sock, &com, sizeof(com));
     this->killTimer(timerID);
     ui->run->setText("Run");
   }
@@ -264,6 +278,10 @@ void MainWindow::connect_socket() {
     ui->config->setEnabled(false);
     ui->run->setEnabled(false);
     ui->save->setEnabled(false);
+
+    com.kill = 1;
+    write(sock, &com, sizeof(com));
+    kill(sock);
   }
 }
 
@@ -292,7 +310,7 @@ void MainWindow::config() {
   }
 
   com.run = 0;
-
+  com.kill = 0;
   ui->run->setEnabled(true);
 
   write(sock, &com, sizeof(com));
@@ -313,4 +331,8 @@ int open_socket(const char *hostname, int Port) {
   server_addr.sin_port = htons(Port);
   connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
   return sock;
+}
+
+int kill(int fd) {
+  return close(fd);
 }
