@@ -5,15 +5,6 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
   QwtPlotGrid *grid = new QwtPlotGrid();
-  // QwtPlotMagnifier *magnifier = new QwtPlotMagnifier(ui->qwtPlot->canvas());
-  // magnifier->setMouseButton(Qt::LeftButton);
-  // QwtPlotPanner *panner = new QwtPlotPanner(ui->qwtPlot->canvas());
-  // panner->setMouseButton(Qt::RightButton);
-
-  // picker = new QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft, QwtPlotPicker::CrossRubberBand, QwtPicker::ActiveOnly, ui->qwtPlot->canvas());
-  // picker->setRubberBandPen(QColor(Qt::blue));
-  // picker->setTrackerPen(QColor(Qt::gray));
-  // picker->setStateMachine();//new QwtPickerDragPointMachine()
   volt_range_p = 5.0;
   volt_range_n = -5.0;
   center = 0;
@@ -288,19 +279,23 @@ void MainWindow::config() {
   com.positive = ain_list[pin];
   com.negative = ain_list[nin];
   com.mode = mode_list[mode];
+  if (ui->analogbuffer->isChecked()) {
+    com.buf = 1;
+  } else {
+    com.buf = 0;
+  }
+
+  if (ui->sync->isChecked()) {
+    com.sync = 1;
+  } else {
+    com.sync = 0;
+  }
+
+  com.run = 0;
 
   ui->run->setEnabled(true);
-  /*
-  uint8_t rate;
-  uint8_t gain;
-  uint8_t positive;
-  uint8_t negative;
-  uint8_t buf;
-  uint8_t sync;
-  uint8_t mode;
-  uint8_t run;
-  uint8_t kill = 0;
-  */
+
+  write(sock, &com, sizeof(com));
 }
 
 int open_socket(const char *hostname, int Port) {

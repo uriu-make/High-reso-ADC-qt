@@ -480,7 +480,7 @@
            </size>
           </property>
           <property name="text">
-           <string>50000</string>
+           <string>60000</string>
           </property>
          </widget>
          <widget class="QPushButton" name="Connect">
@@ -832,7 +832,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="sinc">
+        <widget class="QCheckBox" name="sync">
          <property name="minimumSize">
           <size>
            <width>59</width>
@@ -846,7 +846,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Sinc</string>
+          <string>Sync</string>
          </property>
         </widget>
        </item>
@@ -940,7 +940,7 @@
   <tabstop>in_p</tabstop>
   <tabstop>in_n</tabstop>
   <tabstop>analogbuffer</tabstop>
-  <tabstop>sinc</tabstop>
+  <tabstop>sync</tabstop>
   <tabstop>config</tabstop>
   <tabstop>run</tabstop>
   <tabstop>save</tabstop>
