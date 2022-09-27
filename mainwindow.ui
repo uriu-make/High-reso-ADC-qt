@@ -766,7 +766,7 @@
           </size>
          </property>
          <property name="currentText">
-          <string>AIN0</string>
+          <string>AGND</string>
          </property>
          <item>
           <property name="text">

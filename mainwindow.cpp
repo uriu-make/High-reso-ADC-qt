@@ -148,6 +148,8 @@ void MainWindow::change_time_center(int value) {
 void MainWindow::run() {
   if (ui->run->text().compare("Run", Qt::CaseSensitive) == 0) {
     ui->save->setEnabled(false);
+    ui->config->setEnabled(false);
+    ui->Connect->setEnabled(false);
     ui->run->setText("Stop");
     for (int index = 0; index < plotDataSize; ++index) {
       xData[index] = index;
@@ -156,6 +158,8 @@ void MainWindow::run() {
     timerID = this->startTimer(0);
   } else {
     ui->save->setEnabled(true);
+    ui->config->setEnabled(true);
+    ui->Connect->setEnabled(true);
     this->killTimer(timerID);
     ui->run->setText("Run");
   }
@@ -244,31 +248,59 @@ void MainWindow::save_as() {
 }
 
 void MainWindow::connect_socket() {
-  hostname = ui->Host->text().toStdString();
-  Port = ui->Port->text().toStdString();
-  struct addrinfo hints = {0}, *info;
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
-  if (getaddrinfo(hostname.c_str(), NULL, &hints, &info) < 0) {
-    ui->statusBar->showMessage(QString::fromStdString(hostname) + " is not found.");
-    return;
-  }
-  sock = open_socket(hostname.c_str(), std::stoi(Port));
-  if (sock < 0) {
-    ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is not Connect", 5000);
-    return;
+  if (ui->Connect->text().compare("Connect", Qt::CaseSensitive) == 0) {
+    hostname = ui->Host->text().toStdString();
+    Port = ui->Port->text().toStdString();
+    struct addrinfo hints = {0}, *info;
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    if (getaddrinfo(hostname.c_str(), NULL, &hints, &info) < 0) {
+      ui->statusBar->showMessage(QString::fromStdString(hostname) + " is not found.");
+      return;
+    }
+    sock = open_socket(hostname.c_str(), std::stoi(Port));
+    if (sock < 0) {
+      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is not Connect.", 5000);
+      return;
+    } else {
+      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connect.", 5000);
+      ui->Connect->setText("Disconnect");
+      ui->config->setEnabled(true);
+    }
   } else {
-    ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connect", 5000);
-    ui->Connect->setText("Disconnect");
-    ui->config->setEnabled(true);
+    ui->Connect->setText("Connect");
+    ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Disconnect.", 5000);
+    ui->config->setEnabled(false);
+    ui->run->setEnabled(false);
+    ui->save->setEnabled(false);
   }
 }
+
 void MainWindow::config() {
   int rate = ui->Rate->currentIndex();
   int pga = ui->PGA->currentIndex();
   int pin = ui->in_p->currentIndex();
   int nin = ui->in_n->currentIndex();
   int mode = ui->mode->currentIndex();
+
+  com.rate = rate_list[rate];
+  com.gain = gain_list[pga];
+  com.positive = ain_list[pin];
+  com.negative = ain_list[nin];
+  com.mode = mode_list[mode];
+
+  ui->run->setEnabled(true);
+  /*
+  uint8_t rate;
+  uint8_t gain;
+  uint8_t positive;
+  uint8_t negative;
+  uint8_t buf;
+  uint8_t sync;
+  uint8_t mode;
+  uint8_t run;
+  uint8_t kill = 0;
+  */
 }
 
 int open_socket(const char *hostname, int Port) {

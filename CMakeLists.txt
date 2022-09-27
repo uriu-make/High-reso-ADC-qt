@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(sample-app)
+project(High-reso-ADC)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -11,7 +11,7 @@ set(CMAKE_AUTOUIC ON)
 
 find_package(Qt5Widgets)
 
-add_executable(sample-app
+add_executable(High-reso-ADC
     main.cpp
     mainwindow.cpp
     mainwindow.h
@@ -24,7 +24,7 @@ if(UNIX)
     link_directories(/usr/lib/)
 endif()
 
-target_link_libraries(sample-app
+target_link_libraries(High-reso-ADC
     Qt5::Widgets
     qwt-qt5
 )
