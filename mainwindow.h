@@ -1,5 +1,6 @@
 #include <QMainWindow>
 #include <QBoxLayout>
+#include <QCloseEvent>
 
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
@@ -71,7 +72,7 @@ struct COMMAND {
 
 struct read_data {
   double volt;
-  uint64_t t;
+  int64_t t;
 };
 
 int open_socket(const char *hostname, int Port);
@@ -92,11 +93,14 @@ class MainWindow : public QMainWindow {
   MainWindow(QWidget *parent = nullptr);
   ~MainWindow();
 
+ protected:
+  void closeEvent(QCloseEvent *);
+
  private:
   QwtPlotCurve *curve;
   Ui::MainWindow *ui;
   void timerEvent(QTimerEvent *);
-  static constexpr int plotDataSize = 50000;
+  static constexpr int plotDataSize = 100;
   static constexpr double gain = 1;
 
   // layout elements from Qt itself http://qt-project.org/doc/qt-4.8/classes.html
@@ -104,10 +108,12 @@ class MainWindow : public QMainWindow {
   QHBoxLayout *hLayout;  // horizontal layout
   // QwtPlotPicker *picker;
   // data arrays for the plot
+  int len, sum = 0;
+  int64_t t_0;
   double xData[plotDataSize] = {0};
+  int64_t xData_buf[plotDataSize] = {0};
   double yData[plotDataSize] = {0};
 
-  long count = 0;
   int timerID;
   double volt_range_p, volt_range_n, center, range;
   int t_range, t_center, t_range_p, t_range_n;

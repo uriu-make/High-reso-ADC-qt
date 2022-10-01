@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent)
   palette.setColor(palette.Light, QColor(255, 255, 255));
   ui->lcdNumber->setPalette(palette);
   // ui->run->setCheckable(true);
+  ui->in_n->setCurrentIndex(8);
 
   connect(ui->run, SIGNAL(clicked()), this, SLOT(run()));
   connect(ui->volt_range, SIGNAL(valueChanged(double)), this, SLOT(change_volt_range(double)));
@@ -63,26 +64,35 @@ MainWindow::~MainWindow() {
   delete ui;
 }
 
-void MainWindow::timerEvent(QTimerEvent *) {
-  double inVal = 3.3 + 0.01 * gain * sin(M_PI * count / 10);
-  ++count;
-  int len;
-  struct read_data buf[10000];
-  len = read(sock, buf, sizeof(buf));
-  len = len / sizeof(read_data);
+void MainWindow::timerEvent(QTimerEvent *) {  // memo:受信部分は別スレッドに分離して実行
+  // double inVal = 3.3 + 0.01 * gain * sin(M_PI * count / 10);
+  struct read_data buf[20000];
+
+  read(sock, &len, sizeof(len));
+  read(sock, buf, sizeof(struct read_data) * (len));
+  sum = sum + len;
+  // std::cerr << std::to_string(sum) << std::endl;
+  // len = read(sock, buf, sizeof(buf));
+  // len = len / sizeof(read_data);
   // std::cout << len << std::endl;
   // add the new input to the plot
   // std::move(yData + 1, yData + plotDataSize - 1, yData);
-  std::rotate(xData, xData + len, xData + plotDataSize);
-  std::rotate(yData, yData + len, yData + plotDataSize);
+  // std::rotate(xData, xData + len, xData + plotDataSize);
+  // std::rotate(yData, yData + len, yData + plotDataSize);
+
+  for (int i = len; i < plotDataSize; i++) {
+    yData[i - len] = yData[i];
+    // xData[i - len] = xData[i];
+    xData_buf[i - len] = xData_buf[i];
+  }
 
   for (int i = 0; i < len; i++) {
     yData[plotDataSize - len + i] = buf[i].volt;
-    xData[plotDataSize - len + i] = buf[i].t;
+    xData_buf[plotDataSize - len + i] = buf[i].t;
   }
-
+  t_0 = xData_buf[plotDataSize / 2];
   for (int i = 0; i < plotDataSize; i++) {
-    xData[i] = xData[i] - xData[plotDataSize / 2];
+    xData[i] = (double)(xData_buf[i] - t_0) / 10000;
   }
 
   curve->setSamples(xData, yData, plotDataSize);
@@ -98,7 +108,7 @@ void MainWindow::change_volt_range(double value) {
   volt_range_p = std::clamp(volt_range_p, -5.0, 5.0);
   volt_range_n = std::clamp(volt_range_n, -5.0, 5.0);
 
-  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
   ui->qwtPlot->replot();
 }
 
@@ -111,7 +121,7 @@ void MainWindow::change_time_range(int value) {
     xData[i] = i - t_center + 1;
   }
   t_center = std::clamp(t_center, 0, plotDataSize - 1);
-  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
+  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
   curve->setSamples(xData, yData, plotDataSize);
 
   ui->qwtPlot->replot();
@@ -125,7 +135,7 @@ void MainWindow::change_volt_center(double value) {
   center = value;
   volt_range_p = std::clamp(volt_range_p, -5.0, 5.0);
   volt_range_n = std::clamp(volt_range_n, -5.0, 5.0);
-  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
   ui->qwtPlot->replot();
 }
 
@@ -137,7 +147,7 @@ void MainWindow::change_time_center(int value) {
   for (int i = 0; i < plotDataSize; i++) {
     xData[i] = i - t_center + 1;
   }
-  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
+  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
   curve->setSamples(xData, yData, plotDataSize);
   // ui->time_center->setValue(std::clamp(value, -t_range, t_range));
   ui->qwtPlot->replot();
@@ -178,7 +188,7 @@ void MainWindow::range_reset() {
   volt_range_n = -5.0;
   center = 0;
   range = 5;
-  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
   ui->qwtPlot->replot();
 }
 
@@ -190,7 +200,7 @@ void MainWindow::samplerange_reset() {
   t_center = std::clamp(plotDataSize - t_range, 0, plotDataSize);
   t_range_p = std::clamp(t_center + t_range - 1, 0, plotDataSize) - t_center;
   t_range_n = std::clamp(t_center - t_range - 1, 0, plotDataSize) - t_center;
-  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
+  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
   ui->qwtPlot->replot();
 }
 
@@ -246,7 +256,7 @@ void MainWindow::save_as() {
   filepath = dialog.getSaveFileName(0, tr("名前を付けて保存"), "plot-" + date.toString("yyyy-MM-dd-HH-mm") + ".csv", filters, &defaultFilter);
   std::ofstream output{filepath.toUtf8().data()};
   output << "Volt,time" << std::endl;
-  for (int i = t_center - t_range; i < t_center + t_range; i++) {
+  for (int i = 0; i < plotDataSize; i++) {
     output << std::to_string(yData[i]) + "," + std::to_string(xData[i]) << std::endl;
   }
   output.close();
@@ -265,16 +275,16 @@ void MainWindow::connect_socket() {
     }
     sock = open_socket(hostname.c_str(), std::stoi(Port));
     if (sock < 0) {
-      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is not Connect.", 5000);
+      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is not Connected.", 5000);
       return;
     } else {
-      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connect.", 5000);
+      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connected.", 5000);
       ui->Connect->setText("Disconnect");
       ui->config->setEnabled(true);
     }
   } else {
     ui->Connect->setText("Connect");
-    ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Disconnect.", 5000);
+    ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Disconnected.", 5000);
     ui->config->setEnabled(false);
     ui->run->setEnabled(false);
     ui->save->setEnabled(false);
@@ -316,6 +326,14 @@ void MainWindow::config() {
   write(sock, &com, sizeof(com));
 }
 
+void MainWindow::closeEvent(QCloseEvent *event) {
+  com.run = 0;
+  com.kill = 1;
+  write(sock, &com, sizeof(com));
+  kill(sock);
+  event->accept();
+}
+
 int open_socket(const char *hostname, int Port) {
   int sock = socket(AF_INET, SOCK_STREAM, 0);
   struct addrinfo hints = {0}, *info;
@@ -329,8 +347,13 @@ int open_socket(const char *hostname, int Port) {
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = ((struct sockaddr_in *)(info->ai_addr))->sin_addr.s_addr;
   server_addr.sin_port = htons(Port);
-  connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
-  return sock;
+  if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    return -1;
+  } else {
+    return sock;
+  }
+
+  // sock;
 }
 
 int kill(int fd) {
