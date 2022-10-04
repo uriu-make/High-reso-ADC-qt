@@ -12,6 +12,7 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt5Widgets)
 
 add_executable(High-reso-ADC
+    ADS1256.h
     main.cpp
     mainwindow.cpp
     mainwindow.h

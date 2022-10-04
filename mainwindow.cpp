@@ -5,6 +5,8 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
   QwtPlotGrid *grid = new QwtPlotGrid();
+
+  // test = QThread::create(&MainWindow::run);
   volt_range_p = 5.0;
   volt_range_n = -5.0;
   center = 0;
@@ -41,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
   // ui->run->setCheckable(true);
   ui->in_n->setCurrentIndex(8);
 
-  connect(ui->run, SIGNAL(clicked()), this, SLOT(run()));
+  connect(ui->run, SIGNAL(clicked()), this, SLOT(run_measure()));
   connect(ui->volt_range, SIGNAL(valueChanged(double)), this, SLOT(change_volt_range(double)));
   connect(ui->center, SIGNAL(valueChanged(double)), this, SLOT(change_volt_center(double)));
   connect(ui->time_range, SIGNAL(valueChanged(int)), this, SLOT(change_time_range(int)));
@@ -64,41 +66,13 @@ MainWindow::~MainWindow() {
   delete ui;
 }
 
-void MainWindow::timerEvent(QTimerEvent *) {  // memo:受信部分は別スレッドに分離して実行
-  // double inVal = 3.3 + 0.01 * gain * sin(M_PI * count / 10);
-  struct read_data buf[20000];
-
-  read(sock, &len, sizeof(len));
-  read(sock, buf, sizeof(struct read_data) * (len));
-  sum = sum + len;
-  // std::cerr << std::to_string(sum) << std::endl;
-  // len = read(sock, buf, sizeof(buf));
-  // len = len / sizeof(read_data);
-  // std::cout << len << std::endl;
-  // add the new input to the plot
-  // std::move(yData + 1, yData + plotDataSize - 1, yData);
-  // std::rotate(xData, xData + len, xData + plotDataSize);
-  // std::rotate(yData, yData + len, yData + plotDataSize);
-
-  for (int i = len; i < plotDataSize; i++) {
-    yData[i - len] = yData[i];
-    // xData[i - len] = xData[i];
-    xData_buf[i - len] = xData_buf[i];
-  }
-
-  for (int i = 0; i < len; i++) {
-    yData[plotDataSize - len + i] = buf[i].volt;
-    xData_buf[plotDataSize - len + i] = buf[i].t;
-  }
-  t_0 = xData_buf[plotDataSize / 2];
-  for (int i = 0; i < plotDataSize; i++) {
-    xData[i] = (double)(xData_buf[i] - t_0) / 10000;
-  }
-
+void MainWindow::timerEvent(QTimerEvent *) {
+  mutex.lock();
   curve->setSamples(xData, yData, plotDataSize);
   ui->qwtPlot->replot();
   ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, plotDataSize - 1)]);
   ui->lcdNumber->show();
+  mutex.unlock();
 }
 
 void MainWindow::change_volt_range(double value) {
@@ -155,7 +129,7 @@ void MainWindow::change_time_center(int value) {
   ui->lcdNumber->show();
 }
 
-void MainWindow::run() {
+void MainWindow::run_measure() {
   if (ui->run->text().compare("Run", Qt::CaseSensitive) == 0) {
     ui->save->setEnabled(false);
     ui->config->setEnabled(false);
@@ -168,7 +142,9 @@ void MainWindow::run() {
     com.kill = 0;
     com.run = 1;
     write(sock, &com, sizeof(com));
-    timerID = this->startTimer(0);
+    stopped = false;
+    test->start();
+    timerID = this->startTimer(15);
   } else {
     ui->save->setEnabled(true);
     ui->config->setEnabled(true);
@@ -177,6 +153,8 @@ void MainWindow::run() {
     write(sock, &com, sizeof(com));
     this->killTimer(timerID);
     ui->run->setText("Run");
+    stopped = true;
+    test->exit();
   }
 }
 
@@ -332,6 +310,31 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   write(sock, &com, sizeof(com));
   kill(sock);
   event->accept();
+}
+
+void MainWindow::run(void) {
+  struct read_data buf[20000];
+  int l;
+  while (!stopped) {
+    read(sock, &l, sizeof(l));
+    read(sock, buf, sizeof(struct read_data) * (l));
+    mutex.lock();
+    len = l;
+    for (int i = len; i < plotDataSize; i++) {
+      yData[i - len] = yData[i];
+      xData_buf[i - len] = xData_buf[i];
+    }
+
+    for (int i = 0; i < len; i++) {
+      yData[plotDataSize - len + i] = buf[i].volt;
+      xData_buf[plotDataSize - len + i] = buf[i].t;
+    }
+    t_0 = xData_buf[plotDataSize / 2];
+    for (int i = 0; i < plotDataSize; i++) {
+      xData[i] = (double)(xData_buf[i] - t_0) / 1000000;
+    }
+    mutex.unlock();
+  }
 }
 
 int open_socket(const char *hostname, int Port) {
