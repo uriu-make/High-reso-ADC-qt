@@ -1,18 +1,12 @@
 #include <QMainWindow>
 #include <QBoxLayout>
 #include <QCloseEvent>
-// #include <QtConcurrent/QtConcurrent>
 #include <QThread>
 #include <QMutex>
 
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
-// #include <qwt_plot_zoomer.h>
-// #include <qwt_picker.h>
-// #include <qwt_picker_machine.h>
-// #include <qwt_plot_magnifier.h>
-// #include <qwt_plot_panner.h>
 #include <QFileDialog>
 #include <QDateTime>
 #include <algorithm>
@@ -25,6 +19,7 @@
 #include <unistd.h>
 
 #include "ADS1256.h"
+#include "worker.h"
 
 int open_socket(const char *hostname, int Port);
 int kill(int fd);
@@ -51,24 +46,25 @@ class MainWindow : public QMainWindow {
   QwtPlotCurve *curve;
   Ui::MainWindow *ui;
   QMutex mutex;
-  QThread *test = new QThread(this);
+  Worker *worker;
 
   void timerEvent(QTimerEvent *);
-  void run(void);
+  void run_socket(void);
 
-  static constexpr int plotDataSize = 100;
-  static constexpr double gain = 1;
+  static constexpr int _plotDataSize = 100000;
+  static constexpr double _gain = 1;
 
   // layout elements from Qt itself http://qt-project.org/doc/qt-4.8/classes.html
   QVBoxLayout *vLayout;  // vertical layout
   QHBoxLayout *hLayout;  // horizontal layout
 
-  bool stopped = false;
-  int len;
+  bool _stopped = false;
+  int _len;
   int64_t t_0;
-  double xData[plotDataSize] = {0};
-  int64_t xData_buf[plotDataSize] = {0};
-  double yData[plotDataSize] = {0};
+
+  int64_t xData_buf[_plotDataSize] = {0};
+  double xData[_plotDataSize] = {0};
+  double yData[_plotDataSize] = {0};
 
   int timerID;
   double volt_range_p, volt_range_n, center, range;
@@ -117,7 +113,8 @@ class MainWindow : public QMainWindow {
   uint8_t mode_list[3] = {0};
 
   struct COMMAND com;
-  // struct read_data data[plotDataSize];
+
+  // struct read_data data[_plotDataSize];
 
  private slots:
   void run_measure();

@@ -6,23 +6,18 @@ MainWindow::MainWindow(QWidget *parent)
   ui->setupUi(this);
   QwtPlotGrid *grid = new QwtPlotGrid();
 
-  // test = QThread::create(&MainWindow::run);
   volt_range_p = 5.0;
   volt_range_n = -5.0;
   center = 0;
   range = 5;
   t_range = 100;
-  t_center = std::clamp(plotDataSize - t_range, 0, plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, plotDataSize) - t_center;
+  t_center = std::clamp(_plotDataSize - t_range, 0, _plotDataSize);
+  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
+  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
 
-  for (int i = 0; i < plotDataSize; i++) {
-    yData[i] = 0;
-    xData[i] = i - t_center + 1;
-  }
   curve = new QwtPlotCurve;
   // qwtPlot = new QwtPlot;
-  curve->setSamples(xData, yData, plotDataSize);
+  curve->setSamples(xData, yData, _plotDataSize);
   curve->attach(ui->qwtPlot);
   grid->attach(ui->qwtPlot);
 
@@ -68,9 +63,9 @@ MainWindow::~MainWindow() {
 
 void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
-  curve->setSamples(xData, yData, plotDataSize);
+  curve->setSamples(xData, yData, _plotDataSize);
   ui->qwtPlot->replot();
-  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, plotDataSize - 1)]);
+  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
   ui->lcdNumber->show();
   mutex.unlock();
 }
@@ -88,18 +83,18 @@ void MainWindow::change_volt_range(double value) {
 
 void MainWindow::change_time_range(int value) {
   t_range = value;
-  t_center = std::clamp(plotDataSize - t_range, 0, plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, plotDataSize) - t_center;
-  for (int i = 0; i < plotDataSize; i++) {
+  t_center = std::clamp(_plotDataSize - t_range, 0, _plotDataSize);
+  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
+  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
+  for (int i = 0; i < _plotDataSize; i++) {
     xData[i] = i - t_center + 1;
   }
-  t_center = std::clamp(t_center, 0, plotDataSize - 1);
+  t_center = std::clamp(t_center, 0, _plotDataSize - 1);
   // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
-  curve->setSamples(xData, yData, plotDataSize);
+  curve->setSamples(xData, yData, _plotDataSize);
 
   ui->qwtPlot->replot();
-  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, plotDataSize - 1)]);
+  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
   ui->lcdNumber->show();
 }
 
@@ -114,18 +109,18 @@ void MainWindow::change_volt_center(double value) {
 }
 
 void MainWindow::change_time_center(int value) {
-  t_center = std::clamp(plotDataSize - t_range + value, 0, plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, plotDataSize) - t_center;
+  t_center = std::clamp(_plotDataSize - t_range + value, 0, _plotDataSize);
+  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
+  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
 
-  for (int i = 0; i < plotDataSize; i++) {
+  for (int i = 0; i < _plotDataSize; i++) {
     xData[i] = i - t_center + 1;
   }
   // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
-  curve->setSamples(xData, yData, plotDataSize);
+  curve->setSamples(xData, yData, _plotDataSize);
   // ui->time_center->setValue(std::clamp(value, -t_range, t_range));
   ui->qwtPlot->replot();
-  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, plotDataSize - 1)]);
+  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
   ui->lcdNumber->show();
 }
 
@@ -135,16 +130,15 @@ void MainWindow::run_measure() {
     ui->config->setEnabled(false);
     ui->Connect->setEnabled(false);
     ui->run->setText("Stop");
-    for (int index = 0; index < plotDataSize; ++index) {
+    for (int index = 0; index < _plotDataSize; ++index) {
       xData[index] = index;
       yData[index] = 0;
     }
     com.kill = 0;
     com.run = 1;
+    _stopped = false;
     write(sock, &com, sizeof(com));
-    stopped = false;
-    test->start();
-    timerID = this->startTimer(15);
+    timerID = this->startTimer(0);
   } else {
     ui->save->setEnabled(true);
     ui->config->setEnabled(true);
@@ -152,9 +146,8 @@ void MainWindow::run_measure() {
     com.run = 0;
     write(sock, &com, sizeof(com));
     this->killTimer(timerID);
+    _stopped = true;
     ui->run->setText("Run");
-    stopped = true;
-    test->exit();
   }
 }
 
@@ -175,9 +168,9 @@ void MainWindow::samplerange_reset() {
   ui->time_center->setValue(0);
 
   t_range = 100;
-  t_center = std::clamp(plotDataSize - t_range, 0, plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, plotDataSize) - t_center;
+  t_center = std::clamp(_plotDataSize - t_range, 0, _plotDataSize);
+  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
+  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
   // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
   ui->qwtPlot->replot();
 }
@@ -234,7 +227,7 @@ void MainWindow::save_as() {
   filepath = dialog.getSaveFileName(0, tr("名前を付けて保存"), "plot-" + date.toString("yyyy-MM-dd-HH-mm") + ".csv", filters, &defaultFilter);
   std::ofstream output{filepath.toUtf8().data()};
   output << "Volt,time" << std::endl;
-  for (int i = 0; i < plotDataSize; i++) {
+  for (int i = 0; i < _plotDataSize; i++) {
     output << std::to_string(yData[i]) + "," + std::to_string(xData[i]) << std::endl;
   }
   output.close();
@@ -259,8 +252,16 @@ void MainWindow::connect_socket() {
       ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connected.", 5000);
       ui->Connect->setText("Disconnect");
       ui->config->setEnabled(true);
+      worker = new Worker(&mutex, sock, _plotDataSize, xData, yData);
+      _stopped = true;
+      worker->start();
     }
   } else {
+    worker->requestInterruption();
+    while (worker->isRunning())
+      ;
+    worker->terminate();
+    worker->wait();
     ui->Connect->setText("Connect");
     ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Disconnected.", 5000);
     ui->config->setEnabled(false);
@@ -270,6 +271,7 @@ void MainWindow::connect_socket() {
     com.kill = 1;
     write(sock, &com, sizeof(com));
     kill(sock);
+    free(worker);
   }
 }
 
@@ -312,25 +314,25 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   event->accept();
 }
 
-void MainWindow::run(void) {
+void MainWindow::run_socket(void) {
   struct read_data buf[20000];
   int l;
-  while (!stopped) {
+  while (!_stopped) {
     read(sock, &l, sizeof(l));
     read(sock, buf, sizeof(struct read_data) * (l));
     mutex.lock();
-    len = l;
-    for (int i = len; i < plotDataSize; i++) {
-      yData[i - len] = yData[i];
-      xData_buf[i - len] = xData_buf[i];
+    _len = l;
+    for (int i = _len; i < _plotDataSize; i++) {
+      yData[i - _len] = yData[i];
+      xData_buf[i - _len] = xData_buf[i];
     }
 
-    for (int i = 0; i < len; i++) {
-      yData[plotDataSize - len + i] = buf[i].volt;
-      xData_buf[plotDataSize - len + i] = buf[i].t;
+    for (int i = 0; i < _len; i++) {
+      yData[_plotDataSize - _len + i] = buf[i].volt;
+      xData_buf[_plotDataSize - _len + i] = buf[i].t;
     }
-    t_0 = xData_buf[plotDataSize / 2];
-    for (int i = 0; i < plotDataSize; i++) {
+    t_0 = xData_buf[_plotDataSize / 2];
+    for (int i = 0; i < _plotDataSize; i++) {
       xData[i] = (double)(xData_buf[i] - t_0) / 1000000;
     }
     mutex.unlock();
@@ -355,8 +357,6 @@ int open_socket(const char *hostname, int Port) {
   } else {
     return sock;
   }
-
-  // sock;
 }
 
 int kill(int fd) {

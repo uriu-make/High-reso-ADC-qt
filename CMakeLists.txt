@@ -16,6 +16,8 @@ add_executable(High-reso-ADC
     main.cpp
     mainwindow.cpp
     mainwindow.h
+    worker.cpp
+    worker.h
     mainwindow.ui
 )
 
