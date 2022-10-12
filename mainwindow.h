@@ -49,7 +49,6 @@ class MainWindow : public QMainWindow {
   Worker *worker;
 
   void timerEvent(QTimerEvent *);
-  void run_socket(void);
 
   static constexpr int _plotDataSize = 100000;
   static constexpr double _gain = 1;
@@ -113,6 +112,7 @@ class MainWindow : public QMainWindow {
   uint8_t mode_list[3] = {0};
 
   struct COMMAND com;
+  int writepoint = 0;
 
   // struct read_data data[_plotDataSize];
 

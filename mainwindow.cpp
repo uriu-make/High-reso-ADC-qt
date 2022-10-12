@@ -16,12 +16,12 @@ MainWindow::MainWindow(QWidget *parent)
   t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
 
   curve = new QwtPlotCurve;
-  // qwtPlot = new QwtPlot;
+
   curve->setSamples(xData, yData, _plotDataSize);
   curve->attach(ui->qwtPlot);
   grid->attach(ui->qwtPlot);
 
-  curve->setPen(QPen(QBrush(QColor::fromRgb(255, 0, 0)), 2.0));
+  curve->setPen(QPen(QBrush(QColor::fromRgb(0xAFAF0F)), 2.0));
   grid->setPen(QPen(QBrush(QColor::fromRgb(100, 100, 100)), 2.0));
   ui->qwtPlot->replot();
   ui->qwtPlot->show();
@@ -63,7 +63,8 @@ MainWindow::~MainWindow() {
 
 void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
-  curve->setSamples(xData, yData, _plotDataSize);
+  curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
+  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
   ui->qwtPlot->replot();
   ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
   ui->lcdNumber->show();
@@ -130,9 +131,9 @@ void MainWindow::run_measure() {
     ui->config->setEnabled(false);
     ui->Connect->setEnabled(false);
     ui->run->setText("Stop");
-    for (int index = 0; index < _plotDataSize; ++index) {
-      xData[index] = index;
-      yData[index] = 0;
+    for (int i = 0; i < _plotDataSize; i++) {
+      xData[i] = 0.0;
+      yData[i] = 0.0;
     }
     com.kill = 0;
     com.run = 1;
@@ -252,11 +253,12 @@ void MainWindow::connect_socket() {
       ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connected.", 5000);
       ui->Connect->setText("Disconnect");
       ui->config->setEnabled(true);
-      worker = new Worker(&mutex, sock, _plotDataSize, xData, yData);
+      worker = new Worker(&mutex, &_stopped, sock, _plotDataSize, xData, yData, &writepoint);
       _stopped = true;
       worker->start();
     }
   } else {
+    _stopped = true;
     worker->requestInterruption();
     while (worker->isRunning())
       ;
@@ -312,31 +314,6 @@ void MainWindow::closeEvent(QCloseEvent *event) {
   write(sock, &com, sizeof(com));
   kill(sock);
   event->accept();
-}
-
-void MainWindow::run_socket(void) {
-  struct read_data buf[20000];
-  int l;
-  while (!_stopped) {
-    read(sock, &l, sizeof(l));
-    read(sock, buf, sizeof(struct read_data) * (l));
-    mutex.lock();
-    _len = l;
-    for (int i = _len; i < _plotDataSize; i++) {
-      yData[i - _len] = yData[i];
-      xData_buf[i - _len] = xData_buf[i];
-    }
-
-    for (int i = 0; i < _len; i++) {
-      yData[_plotDataSize - _len + i] = buf[i].volt;
-      xData_buf[_plotDataSize - _len + i] = buf[i].t;
-    }
-    t_0 = xData_buf[_plotDataSize / 2];
-    for (int i = 0; i < _plotDataSize; i++) {
-      xData[i] = (double)(xData_buf[i] - t_0) / 1000000;
-    }
-    mutex.unlock();
-  }
 }
 
 int open_socket(const char *hostname, int Port) {
