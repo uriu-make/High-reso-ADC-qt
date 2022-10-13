@@ -21,14 +21,16 @@ void Worker::run() {
     while (!*stopped) {
       read(sock, &l, sizeof(int));
       read(sock, buf, sizeof(struct read_data) * (l));
-      // l = l / sizeof(struct read_data);
       l_sum = std::clamp(l_sum + l, 0, len);
       mutex->lock();
       *writepoint = len - l_sum;
-      for (int i = l; i < len; i++) {
-        yData[i - l] = yData[i];
-        xData_buf[i - l] = xData_buf[i];
-      }
+      // for (int i = l; i < len; i++) {
+      //   yData[i - l] = yData[i];
+      //   xData_buf[i - l] = xData_buf[i];
+      // }
+      memcpy(yData, &yData[l], sizeof(double) * (len - l));
+
+      memcpy(xData_buf, &xData_buf[l], sizeof(double) * (len - l));
 
       for (int i = 0; i < l; i++) {
         yData[len - l + i] = buf[i].volt;
@@ -39,6 +41,7 @@ void Worker::run() {
         xData[i] = (double)(xData_buf[i] - t_0) / 1000000;
       }
       mutex->unlock();
+      usleep(500);
     }
     l_sum = 0;
   }
