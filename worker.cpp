@@ -13,7 +13,7 @@ Worker::Worker(QMutex* mutex, bool* stopped, int sock, int len, double* xData, d
 void Worker::run() {
   struct read_data buf[20000];
   int64_t xData_buf[len] = {0};
-  int64_t t_0;
+  int64_t t_0 = 0;
   int l = 0;
   int l_sum = 0;
   setTerminationEnabled(false);
@@ -29,7 +29,6 @@ void Worker::run() {
       //   xData_buf[i - l] = xData_buf[i];
       // }
       memcpy(yData, &yData[l], sizeof(double) * (len - l));
-
       memcpy(xData_buf, &xData_buf[l], sizeof(double) * (len - l));
 
       for (int i = 0; i < l; i++) {
@@ -41,7 +40,6 @@ void Worker::run() {
         xData[i] = (double)(xData_buf[i] - t_0) / 1000000;
       }
       mutex->unlock();
-      usleep(500);
     }
     l_sum = 0;
   }

@@ -228,8 +228,11 @@ void MainWindow::save_as() {
   filepath = dialog.getSaveFileName(0, tr("名前を付けて保存"), "plot-" + date.toString("yyyy-MM-dd-HH-mm") + ".csv", filters, &defaultFilter);
   std::ofstream output{filepath.toUtf8().data()};
   output << "Volt,time" << std::endl;
+  char v[20], t[20];
   for (int i = 0; i < _plotDataSize; i++) {
-    output << std::to_string(yData[i]) + "," + std::to_string(xData[i]) << std::endl;
+    std::sprintf(v, "%g", yData[i]);
+    std::sprintf(t, "%g", xData[i]);
+    output << v << "," << t << std::endl;
   }
   output.close();
 }

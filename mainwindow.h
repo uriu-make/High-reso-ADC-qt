@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <iomanip>
 
 #include "ADS1256.h"
 #include "worker.h"
