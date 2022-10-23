@@ -11,27 +11,20 @@ Worker::Worker(QMutex* mutex, bool* stopped, int sock, int len, int64_t* xData_b
 }
 
 void Worker::run() {
-  // struct read_data buf[20000];
-  int l = 0;
   int l_sum = 0;
   setTerminationEnabled(false);
   while (!this->isInterruptionRequested()) {
-    double volt[len] = {0.0};
-    int64_t t[len] = {0};
+    struct read_data buf = {0};
     while (!*stopped) {
-      read(sock, &l, sizeof(int));
-      read(sock, volt, sizeof(double) * l);
-      read(sock, t, sizeof(int64_t) * l);
-
-      // read(sock, buf, sizeof(struct read_data) * (l));
-      l_sum = std::clamp(l_sum + l, 0, len);
+      recv(sock, &buf, sizeof(read_data), MSG_WAITALL);
+       l_sum = std::clamp(l_sum + buf.len, 0, len - 1);
       mutex->lock();
       *writepoint = len - l_sum;
 
-      memcpy(yData, &yData[l], sizeof(double) * (len - l));
-      memcpy(xData_buf, &xData_buf[l], sizeof(int64_t) * (len - l));
-      memcpy(&yData[len - l], volt, sizeof(double) * l);
-      memcpy(&xData_buf[len - l], t, sizeof(int64_t) * l);
+      memcpy(yData, &yData[buf.len], sizeof(double) * (len - buf.len));
+      memcpy(xData_buf, &xData_buf[buf.len], sizeof(int64_t) * (len - buf.len));
+      memcpy(&yData[len - buf.len], buf.volt, sizeof(double) * buf.len);
+      memcpy(&xData_buf[len - buf.len], buf.t, sizeof(int64_t) * buf.len);
       mutex->unlock();
     }
     l_sum = 0;
