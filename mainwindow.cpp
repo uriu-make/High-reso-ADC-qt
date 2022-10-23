@@ -135,16 +135,22 @@ void MainWindow::run_measure() {
     ui->config->setEnabled(false);
     ui->Connect->setEnabled(false);
     ui->run->setText("Stop");
+    mutex.lock();
     for (int i = 0; i < _plotDataSize; i++) {
       xData[i] = 0.0;
       xData_buf[i] = 0.0;
       yData[i] = 0.0;
     }
+    writepoint = _plotDataSize - 1;
+    curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
+    ui->qwtPlot->replot();
+    mutex.unlock();
     com.kill = 0;
     com.run = 1;
     _stopped = false;
     write(sock, &com, sizeof(com));
-    timerID = this->startTimer(0);
+    timerID = this->startTimer(15);
   } else {
     ui->save->setEnabled(true);
     ui->config->setEnabled(true);

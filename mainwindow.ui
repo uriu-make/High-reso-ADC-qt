@@ -863,12 +863,7 @@
          </property>
          <item>
           <property name="text">
-           <string>Raw</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Resampling</string>
+           <string>Volt</string>
           </property>
          </item>
          <item>
