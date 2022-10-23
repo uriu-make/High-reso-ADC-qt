@@ -62,7 +62,7 @@ class MainWindow : public QMainWindow {
   int _len;
   int64_t t_0;
 
-  uint64_t xData_buf[_plotDataSize] = {0};
+  int64_t xData_buf[_plotDataSize] = {0};
   double xData[_plotDataSize] = {0};
   double yData[_plotDataSize] = {0};
 

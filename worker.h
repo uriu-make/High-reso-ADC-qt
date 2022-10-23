@@ -22,10 +22,10 @@ class Worker : public QThread {
   int sock;
   int len;
   int* writepoint;
-  uint64_t* xData_buf;
+  int64_t* xData_buf;
   double* yData;
   QMutex* mutex;
 
  public:
-  Worker(QMutex* mutex, bool* stopped, int sock, int len, uint64_t* xData_buf, double* yData, int* writepoint);
+  Worker(QMutex* mutex, bool* stopped, int sock, int len, int64_t* xData_buf, double* yData, int* writepoint);
 };

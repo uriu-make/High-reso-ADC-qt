@@ -65,7 +65,7 @@ void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
   t_0 = xData_buf[_plotDataSize / 2];
   for (int i = 0; i < _plotDataSize; i++) {
-    xData[i] = double((xData_buf[i] - t_0) / 1000000);
+    xData[i] = (xData_buf[i] - t_0) / 1000000.0;
   }
   curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
