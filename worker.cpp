@@ -1,11 +1,11 @@
 #include "worker.h"
 
-Worker::Worker(QMutex* mutex, bool* stopped, int sock, int len, double* xData, double* yData, int* writepoint) {
+Worker::Worker(QMutex* mutex, bool* stopped, int sock, int len, uint64_t* xData_buf, double* yData, int* writepoint) {
   this->stopped = stopped;
   this->mutex = mutex;
   this->sock = sock;
   this->len = len;
-  this->xData = xData;
+  this->xData_buf = xData_buf;
   this->yData = yData;
   this->writepoint = writepoint;
 }
@@ -13,7 +13,7 @@ Worker::Worker(QMutex* mutex, bool* stopped, int sock, int len, double* xData, d
 void Worker::run() {
   struct read_data buf[20000];
   int64_t xData_buf[len] = {0};
-  int64_t t_0 = 0;
+  // int64_t t_0 = 0;
   int l = 0;
   int l_sum = 0;
   setTerminationEnabled(false);
@@ -24,6 +24,9 @@ void Worker::run() {
       l_sum = std::clamp(l_sum + l, 0, len);
       mutex->lock();
       *writepoint = len - l_sum;
+      std::cerr << " l_sum" << l_sum << std::endl;
+      std::cerr << "len" << len << std::endl;
+      std::cerr << "l" << l << std::endl;
       // for (int i = l; i < len; i++) {
       //   yData[i - l] = yData[i];
       //   xData_buf[i - l] = xData_buf[i];
@@ -35,10 +38,10 @@ void Worker::run() {
         yData[len - l + i] = buf[i].volt;
         xData_buf[len - l + i] = buf[i].t;
       }
-      t_0 = xData_buf[len / 2];
-      for (int i = 0; i < len; i++) {
-        xData[i] = (double)(xData_buf[i] - t_0) / 1000000;
-      }
+      // t_0 = xData_buf[len / 2];
+      // for (int i = 0; i < len; i++) {
+      //   xData[i] = (double)(xData_buf[i] - t_0) / 1000000;
+      // }
       mutex->unlock();
     }
     l_sum = 0;

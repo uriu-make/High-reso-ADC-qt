@@ -63,6 +63,10 @@ MainWindow::~MainWindow() {
 
 void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
+  t_0 = xData_buf[_plotDataSize / 2];
+  for (int i = 0; i < _plotDataSize; i++) {
+    xData[i] = double((xData_buf[i] - t_0) / 1000000);
+  }
   curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
   ui->qwtPlot->replot();
@@ -133,6 +137,7 @@ void MainWindow::run_measure() {
     ui->run->setText("Stop");
     for (int i = 0; i < _plotDataSize; i++) {
       xData[i] = 0.0;
+      xData_buf[i] = 0.0;
       yData[i] = 0.0;
     }
     com.kill = 0;
@@ -256,7 +261,7 @@ void MainWindow::connect_socket() {
       ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connected.", 5000);
       ui->Connect->setText("Disconnect");
       ui->config->setEnabled(true);
-      worker = new Worker(&mutex, &_stopped, sock, _plotDataSize, xData, yData, &writepoint);
+      worker = new Worker(&mutex, &_stopped, sock, _plotDataSize, xData_buf, yData, &writepoint);
       _stopped = true;
       worker->start();
     }
