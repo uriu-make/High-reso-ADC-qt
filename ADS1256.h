@@ -48,8 +48,3 @@ struct COMMAND {
   uint8_t run;
   uint8_t kill = 0;
 };
-
-struct read_data {
-  double volt;
-  int64_t t;
-};
