@@ -21,7 +21,7 @@ MainWindow::MainWindow(QWidget *parent)
   curve->attach(ui->qwtPlot);
   grid->attach(ui->qwtPlot);
 
-  curve->setPen(QPen(QBrush(QColor::fromRgb(0xAFAF0F)), 2.0));
+  curve->setPen(QPen(QBrush(QColor::fromRgb(0xAF,0xAF,0x0F,200)), 2.0));
   grid->setPen(QPen(QBrush(QColor::fromRgb(100, 100, 100)), 2.0));
   ui->qwtPlot->replot();
   ui->qwtPlot->show();
@@ -63,7 +63,11 @@ MainWindow::~MainWindow() {
 
 void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
-  t_0 = xData_buf[_plotDataSize / 2];
+  if (writepoint > _plotDataSize / 2) {
+    t_0 = xData_buf[writepoint];
+  } else {
+    t_0 = xData_buf[_plotDataSize / 2];
+  }
   for (int i = 0; i < _plotDataSize; i++) {
     xData[i] = (xData_buf[i] - t_0) / 1000000.0;
   }
@@ -131,6 +135,7 @@ void MainWindow::change_time_center(int value) {
 
 void MainWindow::run_measure() {
   if (ui->run->text().compare("Run", Qt::CaseSensitive) == 0) {
+    MainWindow::config();
     ui->save->setEnabled(false);
     ui->config->setEnabled(false);
     ui->Connect->setEnabled(false);
