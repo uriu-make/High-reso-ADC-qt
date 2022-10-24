@@ -17,10 +17,12 @@ void Worker::run() {
     struct read_data buf = {0};
     while (!*stopped) {
       recv(sock, &buf, sizeof(read_data), MSG_WAITALL);
-       l_sum = std::clamp(l_sum + buf.len, 0, len - 1);
+      if (buf.len < 0) {
+        break;
+      }
+      l_sum = std::clamp(l_sum + buf.len, 0, len - 1);
       mutex->lock();
       *writepoint = len - l_sum;
-
       memcpy(yData, &yData[buf.len], sizeof(double) * (len - buf.len));
       memcpy(xData_buf, &xData_buf[buf.len], sizeof(int64_t) * (len - buf.len));
       memcpy(&yData[len - buf.len], buf.volt, sizeof(double) * buf.len);
