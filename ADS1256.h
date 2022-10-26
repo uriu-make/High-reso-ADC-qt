@@ -49,10 +49,10 @@ struct COMMAND {
   uint8_t kill = 0;
 };
 
-#define SAMPLENUM 256
+#define SAMPLELEN 128
 
 struct read_data {
   int32_t len;
-  double volt[SAMPLENUM];
-  int64_t t[SAMPLENUM];
+  double volt[SAMPLELEN];
+  int64_t t[SAMPLELEN];
 };
