@@ -41,7 +41,7 @@ class MainWindow : public QMainWindow {
   ~MainWindow();
 
  protected:
-  void closeEvent(QCloseEvent *);
+  void closeEvent(QCloseEvent *) override;
 
  private:
   QwtPlotCurve *curve;
@@ -110,7 +110,7 @@ class MainWindow : public QMainWindow {
       AIN7,
       AGND};
 
-  uint8_t mode_list[3] = {0};
+  uint8_t mode_list[2] = {0,1};
 
   struct COMMAND com;
   int writepoint = 0;

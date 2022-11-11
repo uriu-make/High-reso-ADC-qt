@@ -11,9 +11,9 @@ MainWindow::MainWindow(QWidget *parent)
   center = 0;
   range = 5;
   t_range = 100;
-  t_center = std::clamp(_plotDataSize - t_range, 0, _plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
+  t_center = _plotDataSize / 2;
+  t_range_p = _plotDataSize - 1;
+  t_range_n = 0;
 
   curve = new QwtPlotCurve;
 
@@ -21,14 +21,15 @@ MainWindow::MainWindow(QWidget *parent)
   curve->attach(ui->qwtPlot);
   grid->attach(ui->qwtPlot);
 
-  curve->setPen(QPen(QBrush(QColor::fromRgb(0xAF,0xAF,0x0F,200)), 2.0));
+  curve->setPen(QPen(QBrush(QColor::fromRgb(0xAF, 0xAF, 0x0F, 200)), 2.0));
   grid->setPen(QPen(QBrush(QColor::fromRgb(100, 100, 100)), 2.0));
   ui->qwtPlot->replot();
   ui->qwtPlot->show();
   ui->qwtPlot->setAxisTitle(0, tr("volt"));
   ui->qwtPlot->setAxisTitle(2, tr("time"));
   //  ui->qwtPlot->setAxis
-  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+
   // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
 
   ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
@@ -72,7 +73,11 @@ void MainWindow::timerEvent(QTimerEvent *) {
     xData[i] = (xData_buf[i] - t_0) / 1000000.0;
   }
   curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
-  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
+  if (writepoint > t_range_n) {
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[t_range_p]);
+  } else {
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
+  }
   ui->qwtPlot->replot();
   ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
   ui->lcdNumber->show();
@@ -86,22 +91,18 @@ void MainWindow::change_volt_range(double value) {
   volt_range_p = std::clamp(volt_range_p, -5.0, 5.0);
   volt_range_n = std::clamp(volt_range_n, -5.0, 5.0);
 
-  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
   ui->qwtPlot->replot();
 }
 
 void MainWindow::change_time_range(int value) {
   t_range = value;
-  t_center = std::clamp(_plotDataSize - t_range, 0, _plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
-  for (int i = 0; i < _plotDataSize; i++) {
-    xData[i] = i - t_center + 1;
-  }
-  t_center = std::clamp(t_center, 0, _plotDataSize - 1);
-  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
-  curve->setSamples(xData, yData, _plotDataSize);
+  // t_center = _plotDataSize / 2;
+  t_range_p = std::clamp(t_center + t_range, 0, _plotDataSize - 1);
+  t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
 
+  t_center = std::clamp(t_center, 0, _plotDataSize - 1);
+  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
   ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
   ui->lcdNumber->show();
@@ -113,20 +114,17 @@ void MainWindow::change_volt_center(double value) {
   center = value;
   volt_range_p = std::clamp(volt_range_p, -5.0, 5.0);
   volt_range_n = std::clamp(volt_range_n, -5.0, 5.0);
-  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
   ui->qwtPlot->replot();
 }
 
 void MainWindow::change_time_center(int value) {
-  t_center = std::clamp(_plotDataSize - t_range + value, 0, _plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
-
-  for (int i = 0; i < _plotDataSize; i++) {
-    xData[i] = i - t_center + 1;
-  }
+  t_center = std::clamp(_plotDataSize / 2 + value, 0, _plotDataSize);
+  t_range_p = std::clamp(t_center + t_range, 0, _plotDataSize - 1);
+  t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
+  ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
-  curve->setSamples(xData, yData, _plotDataSize);
+  // curve->setSamples(xData, yData, _plotDataSize);
   // ui->time_center->setValue(std::clamp(value, -t_range, t_range));
   ui->qwtPlot->replot();
   ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
@@ -148,7 +146,7 @@ void MainWindow::run_measure() {
     }
     writepoint = _plotDataSize - 1;
     curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
-    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
+    // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
     ui->qwtPlot->replot();
     mutex.unlock();
     com.kill = 0;
@@ -176,57 +174,50 @@ void MainWindow::range_reset() {
   volt_range_n = -5.0;
   center = 0;
   range = 5;
-  // ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
   ui->qwtPlot->replot();
 }
 
 void MainWindow::samplerange_reset() {
-  ui->time_range->setValue(100);
+  ui->time_range->setValue(50000);
   ui->time_center->setValue(0);
-
-  t_range = 100;
-  t_center = std::clamp(_plotDataSize - t_range, 0, _plotDataSize);
-  t_range_p = std::clamp(t_center + t_range - 1, 0, _plotDataSize) - t_center;
-  t_range_n = std::clamp(t_center - t_range - 1, 0, _plotDataSize) - t_center;
-  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
-  ui->qwtPlot->replot();
 }
 
 void MainWindow::range_fine_func(int checked) {
   if (checked) {
-    ui->volt_range->setSingleStep(0.5);
-    ui->volt_range->setMinimum(0.5);
+    ui->volt_range->setSingleStep(0.1);
+    ui->volt_range->setMinimum(0.1);
 
   } else {
-    ui->volt_range->setSingleStep(0.001);
-    ui->volt_range->setMinimum(0.001);
+    ui->volt_range->setSingleStep(0.0001);
+    ui->volt_range->setMinimum(0.0001);
   }
 }
 
 void MainWindow::center_fine_func(int checked) {
   if (checked) {
-    ui->center->setSingleStep(0.5);
-    ui->center->setMinimum(0.0);
+    ui->center->setSingleStep(0.1);
+    // ui->center->setMinimum(0.0);
 
   } else {
-    ui->center->setSingleStep(0.001);
-    ui->center->setMinimum(0.000);
+    ui->center->setSingleStep(0.0001);
+    // ui->center->setMinimum(0.0000);
   }
 }
 
 void MainWindow::time_fine_func(int checked) {
   if (checked) {
-    ui->time_range->setSingleStep(100);
-    ui->time_range->setMinimum(100);
+    ui->time_range->setSingleStep(1000);
+    ui->time_range->setMinimum(1000);
   } else {
     ui->time_range->setSingleStep(10);
-    ui->time_range->setMinimum(10);
+    ui->time_range->setMinimum(100);
   }
 }
 
 void MainWindow::time_center_fine_func(int checked) {
   if (checked) {
-    ui->time_center->setSingleStep(10);
+    ui->time_center->setSingleStep(100);
     // ui->time_center->setMinimum(-5000);
   } else {
     ui->time_center->setSingleStep(1);
@@ -245,11 +236,14 @@ void MainWindow::save_as() {
   std::ofstream output{filepath.toUtf8().data()};
   output << "Volt,time" << std::endl;
   char v[20], t[20];
+  mutex.lock();
+
   for (int i = 0; i < _plotDataSize; i++) {
     std::sprintf(v, "%g", yData[i]);
     std::sprintf(t, "%g", xData[i]);
     output << v << "," << t << std::endl;
   }
+  mutex.unlock();
   output.close();
 }
 
@@ -283,6 +277,8 @@ void MainWindow::connect_socket() {
       ;
     worker->terminate();
     worker->wait();
+    free(worker);
+    worker = NULL;
     ui->Connect->setText("Connect");
     ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Disconnected.", 5000);
     ui->config->setEnabled(false);
@@ -292,7 +288,6 @@ void MainWindow::connect_socket() {
     com.kill = 1;
     write(sock, &com, sizeof(com));
     kill(sock);
-    free(worker);
   }
 }
 
@@ -328,6 +323,16 @@ void MainWindow::config() {
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
+  if (worker != NULL) {
+    _stopped = true;
+    worker->requestInterruption();
+    while (worker->isRunning())
+      ;
+    worker->terminate();
+    worker->wait();
+    free(worker);
+    worker = NULL;
+  }
   com.run = 0;
   com.kill = 1;
   write(sock, &com, sizeof(com));

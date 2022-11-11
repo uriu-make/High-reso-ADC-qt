@@ -50,7 +50,7 @@ struct COMMAND {
   uint8_t kill = 0;
 };
 
-#define SAMPLELEN 128
+#define SAMPLELEN 126
 
 struct read_data {
   int32_t len;
