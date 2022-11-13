@@ -4,7 +4,9 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow) {
   ui->setupUi(this);
+
   QwtPlotGrid *grid = new QwtPlotGrid();
+  this->sock = new QTcpSocket(this);
 
   volt_range_p = 5.0;
   volt_range_n = -5.0;
@@ -56,6 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->Connect, SIGNAL(clicked()), this, SLOT(connect_socket()));
   connect(ui->save, SIGNAL(clicked()), this, SLOT(save_as()));
   connect(ui->config, SIGNAL(clicked()), this, SLOT(config()));
+  connect(this->sock, SIGNAL(readyRead()), this, SLOT(read_task()));
 }
 
 MainWindow::~MainWindow() {
@@ -149,20 +152,19 @@ void MainWindow::run_measure() {
     // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
     ui->qwtPlot->replot();
     mutex.unlock();
-    com.kill = 0;
-    com.run = 1;
-    _stopped = false;
-    write(sock, &com, sizeof(com));
+    command.kill = 0;
+    command.run = 1;
+    this->sock->write((char *)(&command), sizeof(command));
     timerID = this->startTimer(15);
   } else {
     ui->save->setEnabled(true);
     ui->config->setEnabled(true);
     ui->Connect->setEnabled(true);
-    com.run = 0;
-    write(sock, &com, sizeof(com));
+    command.run = 0;
+    this->sock->write((char *)(&command), sizeof(command));
     this->killTimer(timerID);
-    _stopped = true;
     ui->run->setText("Run");
+    l_sum = 0;
   }
 }
 
@@ -249,45 +251,33 @@ void MainWindow::save_as() {
 
 void MainWindow::connect_socket() {
   if (ui->Connect->text().compare("Connect", Qt::CaseSensitive) == 0) {
-    hostname = ui->Host->text().toStdString();
-    Port = ui->Port->text().toStdString();
-    struct addrinfo hints = {0}, *info;
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    if (getaddrinfo(hostname.c_str(), NULL, &hints, &info) < 0) {
-      ui->statusBar->showMessage(QString::fromStdString(hostname) + " is not found.");
-      return;
-    }
-    sock = open_socket(hostname.c_str(), std::stoi(Port));
-    if (sock < 0) {
-      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is not Connected.", 5000);
-      return;
-    } else {
-      ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Connected.", 5000);
+    hostname = ui->Host->text();
+    Port = ui->Port->text();
+    this->sock->connectToHost(hostname, Port.toUShort());
+    if (sock->waitForConnected(5000)) {
+      ui->statusBar->showMessage(hostname + ":" + Port + " is Connected.", 5000);
       ui->Connect->setText("Disconnect");
       ui->config->setEnabled(true);
-      worker = new Worker(&mutex, &_stopped, sock, _plotDataSize, xData_buf, yData, &writepoint);
-      _stopped = true;
-      worker->start();
+    } else {
+      ui->statusBar->showMessage(hostname + " is not Connected.");
+      return;
     }
+    // sock = open_socket(hostname.c_str(), std::stoi(Port));
+    // if (sock < 0) {
+    //   ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is not Connected.", 5000);
+    //   return;
+    // } else {
   } else {
-    _stopped = true;
-    worker->requestInterruption();
-    while (worker->isRunning())
-      ;
-    worker->terminate();
-    worker->wait();
-    free(worker);
-    worker = NULL;
-    ui->Connect->setText("Connect");
-    ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is Disconnected.", 5000);
-    ui->config->setEnabled(false);
-    ui->run->setEnabled(false);
-    ui->save->setEnabled(false);
-
-    com.kill = 1;
-    write(sock, &com, sizeof(com));
-    kill(sock);
+    command.kill = 1;
+    this->sock->write((char *)(&command), sizeof(command));
+    this->sock->disconnectFromHost();
+    if (sock->state() == QAbstractSocket::UnconnectedState || sock->waitForDisconnected(5000)) {
+      ui->Connect->setText("Connect");
+      ui->statusBar->showMessage(hostname + ":" + Port + " is Disconnected.", 5000);
+      ui->config->setEnabled(false);
+      ui->run->setEnabled(false);
+      ui->save->setEnabled(false);
+    }
   }
 }
 
@@ -298,68 +288,53 @@ void MainWindow::config() {
   int nin = ui->in_n->currentIndex();
   int mode = ui->mode->currentIndex();
 
-  com.rate = rate_list[rate];
-  com.gain = gain_list[pga];
-  com.positive = ain_list[pin];
-  com.negative = ain_list[nin];
-  com.mode = mode_list[mode];
+  command.rate = rate_list[rate];
+  command.gain = gain_list[pga];
+  command.positive = ain_list[pin];
+  command.negative = ain_list[nin];
+  command.mode = mode_list[mode];
   if (ui->analogbuffer->isChecked()) {
-    com.buf = 1;
+    command.buf = 1;
   } else {
-    com.buf = 0;
+    command.buf = 0;
   }
 
   if (ui->sync->isChecked()) {
-    com.sync = 1;
+    command.sync = 1;
   } else {
-    com.sync = 0;
+    command.sync = 0;
   }
 
-  com.run = 0;
-  com.kill = 0;
+  command.run = 0;
+  command.kill = 0;
   ui->run->setEnabled(true);
-
-  write(sock, &com, sizeof(com));
+  this->sock->write((char *)(&command), sizeof(command));
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
-  if (worker != NULL) {
-    _stopped = true;
-    worker->requestInterruption();
-    while (worker->isRunning())
-      ;
-    worker->terminate();
-    worker->wait();
-    free(worker);
-    worker = NULL;
+  if (this->sock->state() != QAbstractSocket::UnconnectedState) {
+    command.kill = 1;
+    this->sock->write((char *)(&command), sizeof(command));
+    this->sock->close();
   }
-  com.run = 0;
-  com.kill = 1;
-  write(sock, &com, sizeof(com));
-  kill(sock);
   event->accept();
 }
 
-int open_socket(const char *hostname, int Port) {
-  int sock = socket(AF_INET, SOCK_STREAM, 0);
-  struct addrinfo hints = {0}, *info;
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
-  if (getaddrinfo(hostname, NULL, &hints, &info) < 0) {
-    return -1;
-  }
+void MainWindow::read_task() {
+  const QByteArray temp;
+  // temp.append(this->sock->readAll());
+  if ((uint64_t)this->sock->bytesAvailable() >= sizeof(read_data)) {
+    this->sock->read((char *)(&data), sizeof(data));
+    if (data.len < 0) {
+    }
+    l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
 
-  struct sockaddr_in server_addr = {0};
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_addr.s_addr = ((struct sockaddr_in *)(info->ai_addr))->sin_addr.s_addr;
-  server_addr.sin_port = htons(Port);
-  if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-    return -1;
-  } else {
-    return sock;
+    this->mutex.lock();
+    writepoint = _plotDataSize + l_sum;
+    memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
+    memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
+    memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
+    memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
+    this->mutex.unlock();
   }
-}
-
-int kill(int fd) {
-  return close(fd);
 }

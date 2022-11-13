@@ -11,14 +11,13 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_CXX_FLAGS "-Wall")
 
 find_package(Qt5Widgets)
+find_package(Qt5 REQUIRED COMPONENTS Network)
 
 add_executable(High-reso-ADC
     ADS1256.h
     main.cpp
     mainwindow.cpp
     mainwindow.h
-    worker.cpp
-    worker.h
     mainwindow.ui
 )
 
@@ -30,6 +29,7 @@ endif()
 
 target_link_libraries(High-reso-ADC
     Qt5::Widgets
+    Qt5::Network
     qwt-qt5
 )
 

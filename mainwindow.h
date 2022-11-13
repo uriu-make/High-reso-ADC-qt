@@ -3,6 +3,7 @@
 #include <QCloseEvent>
 #include <QThread>
 #include <QMutex>
+#include <QTcpSocket>
 
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
@@ -12,18 +13,12 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+
 #include <unistd.h>
 #include <iomanip>
 
 #include "ADS1256.h"
-#include "worker.h"
 
-int open_socket(const char *hostname, int Port);
-int kill(int fd);
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -47,7 +42,7 @@ class MainWindow : public QMainWindow {
   QwtPlotCurve *curve;
   Ui::MainWindow *ui;
   QMutex mutex;
-  Worker *worker;
+  QTcpSocket *sock;
 
   void timerEvent(QTimerEvent *);
 
@@ -58,7 +53,6 @@ class MainWindow : public QMainWindow {
   QVBoxLayout *vLayout;  // vertical layout
   QHBoxLayout *hLayout;  // horizontal layout
 
-  bool _stopped = false;
   int _len;
   int64_t t_0;
 
@@ -69,9 +63,10 @@ class MainWindow : public QMainWindow {
   int timerID;
   double volt_range_p, volt_range_n, center, range;
   int t_range, t_center, t_range_p, t_range_n;
-  std::string hostname, Port;
 
-  int sock;
+  QString hostname;
+  QString Port;
+
   uint8_t rate_list[16] = {
       DATARATE_30000,
       DATARATE_15000,
@@ -110,9 +105,12 @@ class MainWindow : public QMainWindow {
       AIN7,
       AGND};
 
-  uint8_t mode_list[2] = {0,1};
-
-  struct COMMAND com;
+  uint8_t mode_list[2] = {0, 1};
+  struct COMMAND command;
+  struct read_data data;
+//   union T_DATA tx;
+//   union R_DATA rx;
+  int l_sum = 0;
   int writepoint = 0;
 
   // struct read_data data[_plotDataSize];
@@ -135,5 +133,7 @@ class MainWindow : public QMainWindow {
   void connect_socket();
   void save_as();
   void config();
+
+  void read_task();
 };
 #endif  // MAINWINDOW_H

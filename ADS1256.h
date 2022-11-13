@@ -57,3 +57,11 @@ struct read_data {
   double volt[SAMPLELEN];
   int64_t t[SAMPLELEN];
 };
+// union T_DATA {
+//   struct COMMAND *command;
+//   char byte[sizeof(struct COMMAND)];
+// };
+// union R_DATA {
+//   struct read_data *data;
+//   char byte[sizeof(struct read_data)];
+// };
