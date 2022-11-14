@@ -308,6 +308,8 @@ void MainWindow::config() {
   command.run = 0;
   command.kill = 0;
   ui->run->setEnabled(true);
+  char buf[sizeof(COMMAND)];
+  memcpy(buf, &command, sizeof(command));
   this->sock->write((char *)(&command), sizeof(command));
 }
 
@@ -321,9 +323,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::read_task() {
-  const QByteArray temp;
+  const QByteArray temp = this->sock->peek(sizeof(read_data));
   // temp.append(this->sock->readAll());
-  if ((uint64_t)this->sock->bytesAvailable() >= sizeof(read_data)) {
+  if (temp.size() == sizeof(read_data)) {
     this->sock->read((char *)(&data), sizeof(data));
     if (data.len < 0) {
     }

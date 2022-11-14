@@ -38,6 +38,46 @@
 #define AIN7 0b0111
 #define AGND 0b1000
 
+const uint8_t rate_list[16] = {
+    DATARATE_30000,
+    DATARATE_15000,
+    DATARATE_7500,
+    DATARATE_3750,
+    DATARATE_2000,
+    DATARATE_1000,
+    DATARATE_500,
+    DATARATE_100,
+    DATARATE_60,
+    DATARATE_50,
+    DATARATE_30,
+    DATARATE_25,
+    DATARATE_15,
+    DATARATE_10,
+    DATARATE_5,
+    DATARATE_2_5};
+
+const uint8_t gain_list[7] = {
+    GAIN_1,
+    GAIN_2,
+    GAIN_4,
+    GAIN_8,
+    GAIN_16,
+    GAIN_32,
+    GAIN_64};
+
+const uint8_t ain_list[9] = {
+    AIN0,
+    AIN1,
+    AIN2,
+    AIN3,
+    AIN4,
+    AIN5,
+    AIN6,
+    AIN7,
+    AGND};
+
+const uint8_t mode_list[2] = {0, 1};
+
 struct COMMAND {
   uint8_t rate;
   uint8_t gain;

@@ -67,49 +67,11 @@ class MainWindow : public QMainWindow {
   QString hostname;
   QString Port;
 
-  uint8_t rate_list[16] = {
-      DATARATE_30000,
-      DATARATE_15000,
-      DATARATE_7500,
-      DATARATE_3750,
-      DATARATE_2000,
-      DATARATE_1000,
-      DATARATE_500,
-      DATARATE_100,
-      DATARATE_60,
-      DATARATE_50,
-      DATARATE_30,
-      DATARATE_25,
-      DATARATE_15,
-      DATARATE_10,
-      DATARATE_5,
-      DATARATE_2_5};
 
-  uint8_t gain_list[7] = {
-      GAIN_1,
-      GAIN_2,
-      GAIN_4,
-      GAIN_8,
-      GAIN_16,
-      GAIN_32,
-      GAIN_64};
-
-  uint8_t ain_list[9] = {
-      AIN0,
-      AIN1,
-      AIN2,
-      AIN3,
-      AIN4,
-      AIN5,
-      AIN6,
-      AIN7,
-      AGND};
-
-  uint8_t mode_list[2] = {0, 1};
   struct COMMAND command;
   struct read_data data;
-//   union T_DATA tx;
-//   union R_DATA rx;
+  //   union T_DATA tx;
+  //   union R_DATA rx;
   int l_sum = 0;
   int writepoint = 0;
 
