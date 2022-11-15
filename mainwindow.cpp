@@ -248,19 +248,21 @@ void MainWindow::save_as() {
   QString path = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 
   filepath = dialog.getSaveFileName(0, tr("名前を付けて保存"), path + "/" + "plot-" + date.toString("yyyy-MM-dd-HH-mm") + ".csv", filters, &defaultFilter);
-  QFile file(filepath);
-  if (file.open(QFile::ReadWrite)) {
-    QTextStream filestream(&file);
-    filestream.setCodec("UTF-8");
-    filestream.setRealNumberNotation(QTextStream::ScientificNotation);
-    filestream << "Volt[v],Time[s]" << Qt::endl;
-    mutex.lock();
-    for (int i = 0; i < _plotDataSize; i++) {
-      filestream << yData[i] << "," << xData[i] << Qt::endl;
+  if (filepath.size() > 0) {
+    QFile file(filepath);
+    if (file.open(QFile::ReadWrite)) {
+      QTextStream filestream(&file);
+      filestream.setCodec("UTF-8");
+      filestream.setRealNumberNotation(QTextStream::ScientificNotation);
+      filestream << "Volt[v],Time[s]" << Qt::endl;
+      mutex.lock();
+      for (int i = 0; i < _plotDataSize; i++) {
+        filestream << yData[i] << "," << xData[i] << Qt::endl;
+      }
+      mutex.unlock();
+      filestream.flush();
+      file.close();
     }
-    mutex.unlock();
-    filestream.flush();
-    file.close();
   }
 }
 
