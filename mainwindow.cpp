@@ -253,7 +253,7 @@ void MainWindow::connect_socket() {
   if (ui->Connect->text().compare("Connect", Qt::CaseSensitive) == 0) {
     hostname = ui->Host->text();
     Port = ui->Port->text();
-    this->sock->connectToHost(hostname, Port.toUShort());
+    this->sock->connectToHost(hostname, Port.toUShort(),QIODevice::ReadWrite);
     if (sock->waitForConnected(5000)) {
       ui->statusBar->showMessage(hostname + ":" + Port + " is Connected.", 5000);
       ui->Connect->setText("Disconnect");
@@ -308,8 +308,7 @@ void MainWindow::config() {
   command.run = 0;
   command.kill = 0;
   ui->run->setEnabled(true);
-  char buf[sizeof(COMMAND)];
-  memcpy(buf, &command, sizeof(command));
+
   this->sock->write((char *)(&command), sizeof(command));
 }
 
@@ -323,20 +322,25 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::read_task() {
-  const QByteArray temp = this->sock->peek(sizeof(read_data));
-  // temp.append(this->sock->readAll());
-  if (temp.size() == sizeof(read_data)) {
-    this->sock->read((char *)(&data), sizeof(data));
-    if (data.len < 0) {
-    }
-    l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
+  QByteArray buffer;
 
-    this->mutex.lock();
-    writepoint = _plotDataSize + l_sum;
-    memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
-    memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
-    memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
-    memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
-    this->mutex.unlock();
+  if (this->sock->bytesAvailable() >= (qint64)sizeof(read_data)) {
+    std::cerr << this->sock->bytesAvailable() << std::endl;
+    // this->sock->read((char *)(&data), sizeof(data));
+    // QByteArray temp = this->sock->readAll();
+    buffer.append(this->sock->readAll());
+    QByteArray temp = buffer.mid(0, sizeof(read_data));
+    buffer.remove(0, sizeof(read_data));
+    // if (data.len < 0) {
+    // }
+    // l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
+
+    // this->mutex.lock();
+    // writepoint = _plotDataSize + l_sum;
+    // memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
+    // memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
+    // memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
+    // memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
+    // this->mutex.unlock();
   }
 }
