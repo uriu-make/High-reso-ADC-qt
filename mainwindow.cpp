@@ -331,9 +331,10 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::read_task() {
   if (this->sock->bytesAvailable() > 0) {
-    // this->sock->read((char *)(&data), sizeof(data));
-    // QByteArray temp = this->sock->readAll();
+    this->mutex.lock();
     buffer.append(this->sock->readAll());
+    this->mutex.unlock();
+
     QByteArray temp;
     std::cerr << buffer.size() << ":";
     if ((unsigned int)buffer.size() >= sizeof(read_data)) {
@@ -348,12 +349,10 @@ void MainWindow::read_task() {
     }
     l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
 
-    this->mutex.lock();
-    writepoint = _plotDataSize + l_sum;
+    writepoint = _plotDataSize - l_sum;
     memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
     memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
     memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
     memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
-    this->mutex.unlock();
   }
 }
