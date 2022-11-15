@@ -63,6 +63,26 @@ MainWindow::~MainWindow() {
 
 void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
+  QByteArray temp;
+  while (buffer.size() >= sizeof(read_data)) {
+    if ((unsigned int)buffer.size() >= sizeof(read_data)) {
+      temp = buffer.mid(0, sizeof(read_data));
+    }
+    buffer.remove(0, sizeof(read_data));
+    memcpy(&data, temp.constData(), sizeof(data));
+    temp.clear();
+
+    if (data.len < 0) {
+    }
+    l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
+
+    writepoint = _plotDataSize - l_sum;
+    memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
+    memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
+    memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
+    memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
+  }
+
   if (writepoint > _plotDataSize / 2) {
     t_0 = xData_buf[writepoint];
   } else {
@@ -317,25 +337,5 @@ void MainWindow::read_task() {
     this->mutex.lock();
     buffer.append(this->sock->readAll());
     this->mutex.unlock();
-
-    QByteArray temp;
-    std::cerr << buffer.size() << ":";
-    if ((unsigned int)buffer.size() >= sizeof(read_data)) {
-      temp = buffer.mid(0, sizeof(read_data));
-    }
-    buffer.remove(0, sizeof(read_data));
-    std::cerr << temp.size() << std::endl;
-    memcpy(&data, temp.constData(), sizeof(data));
-    temp.clear();
-
-    if (data.len < 0) {
-    }
-    l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
-
-    writepoint = _plotDataSize - l_sum;
-    memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
-    memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
-    memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
-    memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
   }
 }
