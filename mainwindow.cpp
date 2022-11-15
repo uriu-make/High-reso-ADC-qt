@@ -29,16 +29,12 @@ MainWindow::MainWindow(QWidget *parent)
   ui->qwtPlot->show();
   ui->qwtPlot->setAxisTitle(0, tr("volt"));
   ui->qwtPlot->setAxisTitle(2, tr("time"));
-  //  ui->qwtPlot->setAxis
   ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
-
-  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
 
   ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
   QPalette palette = ui->lcdNumber->palette();
   palette.setColor(palette.Light, QColor(255, 255, 255));
   ui->lcdNumber->setPalette(palette);
-  // ui->run->setCheckable(true);
   ui->in_n->setCurrentIndex(8);
 
   connect(ui->run, SIGNAL(clicked()), this, SLOT(run_measure()));
@@ -100,7 +96,6 @@ void MainWindow::change_volt_range(double value) {
 
 void MainWindow::change_time_range(int value) {
   t_range = value;
-  // t_center = _plotDataSize / 2;
   t_range_p = std::clamp(t_center + t_range, 0, _plotDataSize - 1);
   t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
 
@@ -126,9 +121,6 @@ void MainWindow::change_time_center(int value) {
   t_range_p = std::clamp(t_center + t_range, 0, _plotDataSize - 1);
   t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
-  // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, t_range_n, t_range_p + 1, (t_range_p - t_range_n) / 10);
-  // curve->setSamples(xData, yData, _plotDataSize);
-  // ui->time_center->setValue(std::clamp(value, -t_range, t_range));
   ui->qwtPlot->replot();
   ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
   ui->lcdNumber->show();
@@ -203,11 +195,9 @@ void MainWindow::range_fine_func(int checked) {
 void MainWindow::center_fine_func(int checked) {
   if (checked) {
     ui->center->setSingleStep(0.1);
-    // ui->center->setMinimum(0.0);
 
   } else {
     ui->center->setSingleStep(0.0001);
-    // ui->center->setMinimum(0.0000);
   }
 }
 
@@ -224,10 +214,8 @@ void MainWindow::time_fine_func(int checked) {
 void MainWindow::time_center_fine_func(int checked) {
   if (checked) {
     ui->time_center->setSingleStep(100);
-    // ui->time_center->setMinimum(-5000);
   } else {
     ui->time_center->setSingleStep(1);
-    // ui->time_center->setMinimum(-5000);
   }
 }
 
@@ -266,11 +254,6 @@ void MainWindow::connect_socket() {
       ui->statusBar->showMessage(hostname + " is not Connected.");
       return;
     }
-    // sock = open_socket(hostname.c_str(), std::stoi(Port));
-    // if (sock < 0) {
-    //   ui->statusBar->showMessage(QString::fromStdString(hostname) + ":" + QString::fromStdString(Port) + " is not Connected.", 5000);
-    //   return;
-    // } else {
   } else {
     command.kill = 1;
     this->sock->write((char *)(&command), sizeof(command));

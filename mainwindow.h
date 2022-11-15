@@ -49,10 +49,8 @@ class MainWindow : public QMainWindow {
   static constexpr int _plotDataSize = 100000;
   static constexpr double _gain = 1;
 
-  // layout elements from Qt itself http://qt-project.org/doc/qt-4.8/classes.html
-  QVBoxLayout *vLayout;  // vertical layout
-  QHBoxLayout *hLayout;  // horizontal layout
-
+  QVBoxLayout *vLayout;  
+  QHBoxLayout *hLayout;  
   int _len;
   int64_t t_0;
 
@@ -69,13 +67,10 @@ class MainWindow : public QMainWindow {
 
   struct COMMAND command;
   struct read_data data;
-  //   union T_DATA tx;
-  //   union R_DATA rx;
+
   int l_sum = 0;
   int writepoint = 0;
   QByteArray buffer;
-
-  // struct read_data data[_plotDataSize];
 
  private slots:
   void run_measure();
