@@ -4,7 +4,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QTcpSocket>
-
+#include <QAbstractSocket>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
@@ -67,13 +67,13 @@ class MainWindow : public QMainWindow {
   QString hostname;
   QString Port;
 
-
   struct COMMAND command;
   struct read_data data;
   //   union T_DATA tx;
   //   union R_DATA rx;
   int l_sum = 0;
   int writepoint = 0;
+  QByteArray buffer;
 
   // struct read_data data[_plotDataSize];
 

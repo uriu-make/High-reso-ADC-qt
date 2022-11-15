@@ -155,6 +155,8 @@ void MainWindow::run_measure() {
     command.kill = 0;
     command.run = 1;
     this->sock->write((char *)(&command), sizeof(command));
+    this->sock->flush();
+
     timerID = this->startTimer(15);
   } else {
     ui->save->setEnabled(true);
@@ -162,6 +164,8 @@ void MainWindow::run_measure() {
     ui->Connect->setEnabled(true);
     command.run = 0;
     this->sock->write((char *)(&command), sizeof(command));
+    this->sock->flush();
+
     this->killTimer(timerID);
     ui->run->setText("Run");
     l_sum = 0;
@@ -253,7 +257,7 @@ void MainWindow::connect_socket() {
   if (ui->Connect->text().compare("Connect", Qt::CaseSensitive) == 0) {
     hostname = ui->Host->text();
     Port = ui->Port->text();
-    this->sock->connectToHost(hostname, Port.toUShort(),QIODevice::ReadWrite);
+    this->sock->connectToHost(hostname, Port.toUShort(), QIODevice::ReadWrite);
     if (sock->waitForConnected(5000)) {
       ui->statusBar->showMessage(hostname + ":" + Port + " is Connected.", 5000);
       ui->Connect->setText("Disconnect");
@@ -270,6 +274,8 @@ void MainWindow::connect_socket() {
   } else {
     command.kill = 1;
     this->sock->write((char *)(&command), sizeof(command));
+    this->sock->flush();
+
     this->sock->disconnectFromHost();
     if (sock->state() == QAbstractSocket::UnconnectedState || sock->waitForDisconnected(5000)) {
       ui->Connect->setText("Connect");
@@ -310,37 +316,44 @@ void MainWindow::config() {
   ui->run->setEnabled(true);
 
   this->sock->write((char *)(&command), sizeof(command));
+  this->sock->flush();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   if (this->sock->state() != QAbstractSocket::UnconnectedState) {
     command.kill = 1;
     this->sock->write((char *)(&command), sizeof(command));
+    this->sock->flush();
     this->sock->close();
   }
   event->accept();
 }
 
 void MainWindow::read_task() {
-  QByteArray buffer;
-
-  if (this->sock->bytesAvailable() >= (qint64)sizeof(read_data)) {
-    std::cerr << this->sock->bytesAvailable() << std::endl;
+  if (this->sock->bytesAvailable() > 0) {
     // this->sock->read((char *)(&data), sizeof(data));
     // QByteArray temp = this->sock->readAll();
     buffer.append(this->sock->readAll());
-    QByteArray temp = buffer.mid(0, sizeof(read_data));
+    QByteArray temp;
+    std::cerr << buffer.size() << ":";
+    if ((unsigned int)buffer.size() >= sizeof(read_data)) {
+      temp = buffer.mid(0, sizeof(read_data));
+    }
     buffer.remove(0, sizeof(read_data));
-    // if (data.len < 0) {
-    // }
-    // l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
+    std::cerr << temp.size() << std::endl;
+    memcpy(&data, temp.constData(), sizeof(data));
+    temp.clear();
 
-    // this->mutex.lock();
-    // writepoint = _plotDataSize + l_sum;
-    // memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
-    // memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
-    // memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
-    // memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
-    // this->mutex.unlock();
+    if (data.len < 0) {
+    }
+    l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
+
+    this->mutex.lock();
+    writepoint = _plotDataSize + l_sum;
+    memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
+    memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
+    memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
+    memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
+    this->mutex.unlock();
   }
 }
