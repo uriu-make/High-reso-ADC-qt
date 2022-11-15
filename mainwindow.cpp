@@ -65,14 +65,14 @@ void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
   QByteArray temp;
   while ((unsigned int)buffer.size() >= sizeof(read_data)) {
-    // if ((unsigned int)buffer.size() >= sizeof(read_data)) {
     temp = buffer.mid(0, sizeof(read_data));
-    // }
+
     buffer.remove(0, sizeof(read_data));
     memcpy(&data, temp.constData(), sizeof(data));
     temp.clear();
 
     if (data.len < 0) {
+      break;
     }
     l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
 
@@ -154,6 +154,7 @@ void MainWindow::run_measure() {
     ui->Connect->setEnabled(false);
     ui->run->setText("Stop");
     mutex.lock();
+    buffer.clear();
     for (int i = 0; i < _plotDataSize; i++) {
       xData[i] = 0.0;
       xData_buf[i] = 0.0;
@@ -161,7 +162,6 @@ void MainWindow::run_measure() {
     }
     writepoint = _plotDataSize - 1;
     curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
-    // ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[_plotDataSize - 1]);
     ui->qwtPlot->replot();
     mutex.unlock();
     command.kill = 0;
@@ -240,25 +240,28 @@ void MainWindow::time_center_fine_func(int checked) {
 }
 
 void MainWindow::save_as() {
-  QString filters("CSV files (.csv);;All files(*.*)");
-  QString defaultFilter("CSV files (.csv)");
+  QString filters("CSV files (*.csv);;All files(*.*)");
+  QString defaultFilter("CSV files (*.csv)");
   QString filepath;
   QDateTime date = QDateTime::currentDateTime();
   QFileDialog dialog;
-  dialog.setOption(QFileDialog::HideNameFilterDetails, false);
-  filepath = dialog.getSaveFileName(0, tr("名前を付けて保存"), "plot-" + date.toString("yyyy-MM-dd-HH-mm") + ".csv", filters, &defaultFilter);
-  std::ofstream output{filepath.toUtf8().data()};
-  output << "Volt,time" << std::endl;
-  char v[20], t[20];
-  mutex.lock();
+  QString path = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
 
-  for (int i = 0; i < _plotDataSize; i++) {
-    std::sprintf(v, "%g", yData[i]);
-    std::sprintf(t, "%g", xData[i]);
-    output << v << "," << t << std::endl;
+  filepath = dialog.getSaveFileName(0, tr("名前を付けて保存"), path + "/" + "plot-" + date.toString("yyyy-MM-dd-HH-mm") + ".csv", filters, &defaultFilter);
+  QFile file(filepath);
+  if (file.open(QFile::ReadWrite)) {
+    QTextStream filestream(&file);
+    filestream.setCodec("UTF-8");
+    filestream.setRealNumberNotation(QTextStream::ScientificNotation);
+    filestream << "Volt[v],Time[s]" << Qt::endl;
+    mutex.lock();
+    for (int i = 0; i < _plotDataSize; i++) {
+      filestream << yData[i] << "," << xData[i] << Qt::endl;
+    }
+    mutex.unlock();
+    filestream.flush();
+    file.close();
   }
-  mutex.unlock();
-  output.close();
 }
 
 void MainWindow::connect_socket() {

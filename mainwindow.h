@@ -5,6 +5,9 @@
 #include <QMutex>
 #include <QTcpSocket>
 #include <QAbstractSocket>
+#include <QStandardPaths>
+#include <QTextStream>
+
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_grid.h>
