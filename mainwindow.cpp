@@ -64,10 +64,10 @@ MainWindow::~MainWindow() {
 void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
   QByteArray temp;
-  while (buffer.size() >= sizeof(read_data)) {
-    if ((unsigned int)buffer.size() >= sizeof(read_data)) {
-      temp = buffer.mid(0, sizeof(read_data));
-    }
+  while ((unsigned int)buffer.size() >= sizeof(read_data)) {
+    // if ((unsigned int)buffer.size() >= sizeof(read_data)) {
+    temp = buffer.mid(0, sizeof(read_data));
+    // }
     buffer.remove(0, sizeof(read_data));
     memcpy(&data, temp.constData(), sizeof(data));
     temp.clear();
