@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1422</width>
-    <height>792</height>
+    <height>769</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -575,60 +575,59 @@
       <property name="title">
        <string/>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_7">
+      <layout class="QVBoxLayout" name="verticalLayout_9">
        <item>
-        <widget class="QLCDNumber" name="lcdNumber">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>57</height>
-          </size>
+        <widget class="QLabel" name="volt">
+         <property name="text">
+          <string>0V</string>
          </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>57</height>
-          </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Box</enum>
-         </property>
-         <property name="smallDecimalPoint">
-          <bool>false</bool>
-         </property>
-         <property name="digitCount">
-          <number>10</number>
-         </property>
-         <property name="segmentStyle">
-          <enum>QLCDNumber::Flat</enum>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="run">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>219</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Run</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="save">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>Save</string>
-         </property>
-        </widget>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QPushButton" name="run">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>219</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Run</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="saveall">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Save all</string>
+           </property>
+           <property name="checkable">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="save">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Save</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </item>
        <item>
         <widget class="Line" name="line_3">
@@ -638,7 +637,7 @@
         </widget>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
+        <layout class="QVBoxLayout" name="verticalLayout_7">
          <item>
           <widget class="QLabel" name="label_12">
            <property name="text">
@@ -647,148 +646,161 @@
           </widget>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout">
+          <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>Range[V]</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout">
+            <layout class="QVBoxLayout" name="verticalLayout">
              <item>
-              <widget class="QCheckBox" name="range_fine">
-               <property name="minimumSize">
-                <size>
-                 <width>59</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>59</width>
-                 <height>16777215</height>
-                </size>
-               </property>
+              <widget class="QLabel" name="label_7">
                <property name="text">
-                <string>Fine</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-               <property name="tristate">
-                <bool>false</bool>
+                <string>Range[V]</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="volt_range">
-               <property name="minimumSize">
-                <size>
-                 <width>70</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>112</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="frame">
-                <bool>true</bool>
-               </property>
-               <property name="buttonSymbols">
-                <enum>QAbstractSpinBox::UpDownArrows</enum>
-               </property>
-               <property name="accelerated">
-                <bool>false</bool>
-               </property>
-               <property name="keyboardTracking">
-                <bool>true</bool>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="minimum">
-                <double>0.100000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>5.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.100000000000000</double>
-               </property>
-               <property name="value">
-                <double>5.000000000000000</double>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout">
+               <item>
+                <widget class="QCheckBox" name="range_fine">
+                 <property name="minimumSize">
+                  <size>
+                   <width>59</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>59</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Fine</string>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                 <property name="tristate">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="volt_range">
+                 <property name="minimumSize">
+                  <size>
+                   <width>70</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>112</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="wrapping">
+                  <bool>false</bool>
+                 </property>
+                 <property name="frame">
+                  <bool>true</bool>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="buttonSymbols">
+                  <enum>QAbstractSpinBox::UpDownArrows</enum>
+                 </property>
+                 <property name="accelerated">
+                  <bool>false</bool>
+                 </property>
+                 <property name="keyboardTracking">
+                  <bool>true</bool>
+                 </property>
+                 <property name="decimals">
+                  <number>6</number>
+                 </property>
+                 <property name="minimum">
+                  <double>0.100000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>5.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                 <property name="value">
+                  <double>5.000000000000000</double>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>Center[V]</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <layout class="QVBoxLayout" name="verticalLayout_3">
              <item>
-              <widget class="QCheckBox" name="center_range">
-               <property name="minimumSize">
-                <size>
-                 <width>59</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>59</width>
-                 <height>16777215</height>
-                </size>
-               </property>
+              <widget class="QLabel" name="label_9">
                <property name="text">
-                <string>Fine</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
+                <string>Center[V]</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QDoubleSpinBox" name="center">
-               <property name="minimumSize">
-                <size>
-                 <width>70</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>75</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="decimals">
-                <number>4</number>
-               </property>
-               <property name="minimum">
-                <double>-5.000000000000000</double>
-               </property>
-               <property name="maximum">
-                <double>5.000000000000000</double>
-               </property>
-               <property name="singleStep">
-                <double>0.100000000000000</double>
-               </property>
-              </widget>
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <item>
+                <widget class="QCheckBox" name="center_range">
+                 <property name="minimumSize">
+                  <size>
+                   <width>59</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>59</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Fine</string>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QDoubleSpinBox" name="center">
+                 <property name="minimumSize">
+                  <size>
+                   <width>70</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>112</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="decimals">
+                  <number>6</number>
+                 </property>
+                 <property name="minimum">
+                  <double>-5.000000000000000</double>
+                 </property>
+                 <property name="maximum">
+                  <double>5.000000000000000</double>
+                 </property>
+                 <property name="singleStep">
+                  <double>0.100000000000000</double>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>
@@ -847,7 +859,7 @@
                 <string> Fine</string>
                </property>
                <property name="checked">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="tristate">
                 <bool>false</bool>
@@ -856,6 +868,9 @@
              </item>
              <item>
               <widget class="QSpinBox" name="time_range">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
                <property name="minimum">
                 <number>1000</number>
                </property>
@@ -903,7 +918,7 @@
                 <string>Fine</string>
                </property>
                <property name="checked">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
                <property name="tristate">
                 <bool>false</bool>
@@ -912,6 +927,9 @@
              </item>
              <item>
               <widget class="QSpinBox" name="time_center">
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
                <property name="minimum">
                 <number>-50000</number>
                </property>

@@ -31,10 +31,12 @@ MainWindow::MainWindow(QWidget *parent)
   ui->qwtPlot->setAxisTitle(2, tr("time"));
   ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
 
-  ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
-  QPalette palette = ui->lcdNumber->palette();
-  palette.setColor(palette.Light, QColor(255, 255, 255));
-  ui->lcdNumber->setPalette(palette);
+  // ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
+  // QPalette palette = ui->lcdNumber->palette();
+  // palette.setColor(palette.Light, QColor(255, 255, 255));
+  // ui->lcdNumber->setPalette(palette);
+  ui->volt->setText(QString::number(0.0, 'g', 9) + "V");
+
   ui->in_n->setCurrentIndex(8);
 
   connect(ui->run, SIGNAL(clicked()), this, SLOT(run_measure()));
@@ -98,8 +100,10 @@ void MainWindow::timerEvent(QTimerEvent *) {
     ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   }
   ui->qwtPlot->replot();
-  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
-  ui->lcdNumber->show();
+  // ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
+  // ui->lcdNumber->show();
+  // QString s =
+  ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
   mutex.unlock();
 }
 
@@ -122,8 +126,9 @@ void MainWindow::change_time_range(int value) {
   t_center = std::clamp(t_center, 0, _plotDataSize - 1);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
-  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
-  ui->lcdNumber->show();
+  // ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
+  // ui->lcdNumber->show();
+  ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
 }
 
 void MainWindow::change_volt_center(double value) {
@@ -142,8 +147,9 @@ void MainWindow::change_time_center(int value) {
   t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
-  ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
-  ui->lcdNumber->show();
+  // ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
+  // ui->lcdNumber->show();
+  ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
 }
 
 void MainWindow::run_measure() {
@@ -203,39 +209,38 @@ void MainWindow::samplerange_reset() {
 
 void MainWindow::range_fine_func(int checked) {
   if (checked) {
-    ui->volt_range->setSingleStep(0.1);
-    ui->volt_range->setMinimum(0.1);
+    ui->volt_range->setSingleStep(0.000001);
+    ui->volt_range->setMinimum(0.000001);
 
   } else {
-    ui->volt_range->setSingleStep(0.0001);
-    ui->volt_range->setMinimum(0.0001);
+    ui->volt_range->setSingleStep(0.001);
+    ui->volt_range->setMinimum(0.001);
   }
 }
 
 void MainWindow::center_fine_func(int checked) {
   if (checked) {
-    ui->center->setSingleStep(0.1);
-
+    ui->center->setSingleStep(0.000001);
   } else {
-    ui->center->setSingleStep(0.0001);
+    ui->center->setSingleStep(0.1);
   }
 }
 
 void MainWindow::time_fine_func(int checked) {
   if (checked) {
-    ui->time_range->setSingleStep(1000);
-    ui->time_range->setMinimum(1000);
-  } else {
     ui->time_range->setSingleStep(10);
     ui->time_range->setMinimum(100);
+  } else {
+    ui->time_range->setSingleStep(1000);
+    ui->time_range->setMinimum(1000);
   }
 }
 
 void MainWindow::time_center_fine_func(int checked) {
   if (checked) {
-    ui->time_center->setSingleStep(100);
-  } else {
     ui->time_center->setSingleStep(1);
+  } else {
+    ui->time_center->setSingleStep(100);
   }
 }
 
