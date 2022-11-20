@@ -262,7 +262,7 @@ void MainWindow::save_as() {
       filestream << "Volt[v],Time[s]" << Qt::endl;
       mutex.lock();
       for (int i = 0; i < _plotDataSize; i++) {
-        filestream << yData[i] << "," << xData[i] << Qt::endl;
+        filestream << QString::number(yData[i], 'g', 9) << "," << QString::number(xData[i], 'g', 9) << Qt::endl;
       }
       mutex.unlock();
       filestream.flush();
