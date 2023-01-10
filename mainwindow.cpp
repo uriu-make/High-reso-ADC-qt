@@ -100,9 +100,6 @@ void MainWindow::timerEvent(QTimerEvent *) {
     ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   }
   ui->qwtPlot->replot();
-  // ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
-  // ui->lcdNumber->show();
-  // QString s =
   ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
   mutex.unlock();
 }
