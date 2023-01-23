@@ -66,41 +66,60 @@ MainWindow::~MainWindow() {
 void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
   QByteArray temp;
-  while ((unsigned int)buffer.size() >= sizeof(read_data)) {
-    temp = buffer.mid(0, sizeof(read_data));
-
-    buffer.remove(0, sizeof(read_data));
-    memcpy(&data, temp.constData(), sizeof(data));
-    temp.clear();
-
-    if (data.len < 0) {
-      break;
+  if (ui->mode->currentIndex() == 1) {
+    std::complex<double> F[N];
+    while ((unsigned int)buffer.size() >= sizeof(read_data)) {
+      temp = buffer.mid(0, sizeof(F));
+      buffer.remove(0, sizeof(F));
+      memcpy(F, temp.constData(), sizeof(F));
+      temp.clear();
     }
-    l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
 
-    writepoint = _plotDataSize - l_sum;
-    memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
-    memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
-    memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
-    memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
-  }
+    for (int i = 0; i < N; i++) {
+      xData[i] = i;
+      yData[i] = std::abs(F[i]) / static_cast<double>(N);
+    }
+    ui->qwtPlot->setAxisAutoScale(QwtPlot::xTop, true);
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, N);
+    curve->setSamples(xData, yData, N);
+    ui->qwtPlot->replot();
+  } else {
+    while ((unsigned int)buffer.size() >= sizeof(read_data)) {
+      temp = buffer.mid(0, sizeof(read_data));
 
-  if (writepoint > _plotDataSize / 2) {
-    t_0 = xData_buf[writepoint];
-  } else {
-    t_0 = xData_buf[_plotDataSize / 2];
+      buffer.remove(0, sizeof(read_data));
+      memcpy(&data, temp.constData(), sizeof(data));
+      temp.clear();
+
+      if (data.len < 0) {
+        break;
+      }
+      l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
+
+      writepoint = _plotDataSize - l_sum;
+      memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
+      memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
+      memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
+      memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
+    }
+
+    if (writepoint > _plotDataSize / 2) {
+      t_0 = xData_buf[writepoint];
+    } else {
+      t_0 = xData_buf[_plotDataSize / 2];
+    }
+    for (int i = 0; i < _plotDataSize; i++) {
+      xData[i] = (xData_buf[i] - t_0) / 1000000.0;
+    }
+    curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
+    if (writepoint > t_range_n) {
+      ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[t_range_p]);
+    } else {
+      ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
+    }
+    ui->qwtPlot->replot();
+    ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
   }
-  for (int i = 0; i < _plotDataSize; i++) {
-    xData[i] = (xData_buf[i] - t_0) / 1000000.0;
-  }
-  curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
-  if (writepoint > t_range_n) {
-    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[t_range_p]);
-  } else {
-    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
-  }
-  ui->qwtPlot->replot();
-  ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
   mutex.unlock();
 }
 
@@ -123,8 +142,6 @@ void MainWindow::change_time_range(int value) {
   t_center = std::clamp(t_center, 0, _plotDataSize - 1);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
-  // ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
-  // ui->lcdNumber->show();
   ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
 }
 
@@ -150,11 +167,47 @@ void MainWindow::change_time_center(int value) {
 }
 
 void MainWindow::run_measure() {
+  measure_mode = ui->mode->currentIndex();
+  if (measure_mode == 1) {
+    ui->Rate->setCurrentIndex(0);
+    ui->Rate->setEnabled(false);
+    ui->range_fine->setEnabled(false);
+    ui->volt_range->setEnabled(false);
+    ui->center_range->setEnabled(false);
+    ui->center->setEnabled(false);
+    ui->reset_range->setEnabled(false);
+
+    ui->time_fine->setEnabled(false);
+    ui->time_range->setEnabled(false);
+    ui->time_center_fine->setEnabled(false);
+    ui->time_center->setEnabled(false);
+    ui->samplereset->setEnabled(false);
+  } else {
+    ui->Rate->setEnabled(true);
+    ui->range_fine->setEnabled(true);
+    ui->volt_range->setEnabled(true);
+    ui->center_range->setEnabled(true);
+    ui->center->setEnabled(true);
+    ui->reset_range->setEnabled(true);
+
+    ui->time_fine->setEnabled(true);
+    ui->time_range->setEnabled(true);
+    ui->time_center_fine->setEnabled(true);
+    ui->time_center->setEnabled(true);
+    ui->samplereset->setEnabled(false);
+  }
   if (ui->run->text().compare("Run", Qt::CaseSensitive) == 0) {
     MainWindow::config();
     ui->save->setEnabled(false);
     ui->config->setEnabled(false);
     ui->Connect->setEnabled(false);
+    ui->Rate->setEnabled(false);
+    ui->PGA->setEnabled(false);
+    ui->in_p->setEnabled(false);
+    ui->in_n->setEnabled(false);
+    ui->analogbuffer->setEnabled(false);
+    ui->sync->setEnabled(false);
+    ui->mode->setEnabled(false);
     ui->run->setText("Stop");
     mutex.lock();
     buffer.clear();
@@ -177,6 +230,18 @@ void MainWindow::run_measure() {
     ui->save->setEnabled(true);
     ui->config->setEnabled(true);
     ui->Connect->setEnabled(true);
+
+    ui->save->setEnabled(true);
+    ui->config->setEnabled(true);
+    ui->Connect->setEnabled(true);
+    ui->Rate->setEnabled(true);
+    ui->PGA->setEnabled(true);
+    ui->in_p->setEnabled(true);
+    ui->in_n->setEnabled(true);
+    ui->analogbuffer->setEnabled(true);
+    ui->sync->setEnabled(true);
+    ui->mode->setEnabled(true);
+
     command.run = 0;
     this->sock->write((char *)(&command), sizeof(command));
     this->sock->flush();
@@ -206,18 +271,18 @@ void MainWindow::samplerange_reset() {
 
 void MainWindow::range_fine_func(int checked) {
   if (checked) {
-    ui->volt_range->setSingleStep(0.000001);
+    ui->volt_range->setSingleStep(0.0001);
     ui->volt_range->setMinimum(0.000001);
 
   } else {
-    ui->volt_range->setSingleStep(0.001);
-    ui->volt_range->setMinimum(0.001);
+    ui->volt_range->setSingleStep(0.1);
+    ui->volt_range->setMinimum(0.1);
   }
 }
 
 void MainWindow::center_fine_func(int checked) {
   if (checked) {
-    ui->center->setSingleStep(0.000001);
+    ui->center->setSingleStep(0.0001);
   } else {
     ui->center->setSingleStep(0.1);
   }
@@ -256,13 +321,24 @@ void MainWindow::save_as() {
       QTextStream filestream(&file);
       filestream.setCodec("UTF-8");
       filestream.setRealNumberNotation(QTextStream::ScientificNotation);
-      filestream << "Volt[v],Time[s]" << Qt::endl;
-      mutex.lock();
-      for (int i = 0; i < _plotDataSize; i++) {
-        filestream << QString::number(yData[i], 'g', 9) << "," << QString::number(xData[i], 'g', 9) << Qt::endl;
+      if (measure_mode == 0) {
+        filestream << "Volt[v],Time[s]" << Qt::endl;
+        mutex.lock();
+        for (int i = 0; i < _plotDataSize; i++) {
+          filestream << QString::number(yData[i], 'g', 9) << "," << QString::number(xData[i], 'g', 9) << Qt::endl;
+        }
+        mutex.unlock();
+        filestream.flush();
+      } else if (measure_mode == 1) {
+        filestream << "freq,num" << Qt::endl;
+        mutex.lock();
+        for (int i = 0; i < N; i++) {
+          filestream << QString::number(yData[i], 'g', 9) << "," << QString::number(xData[i], 'g', 9) << Qt::endl;
+        }
+        mutex.unlock();
+        filestream.flush();
       }
-      mutex.unlock();
-      filestream.flush();
+
       file.close();
     }
   }
@@ -319,6 +395,35 @@ void MainWindow::config() {
     command.sync = 1;
   } else {
     command.sync = 0;
+  }
+
+  if (mode == 1) {
+    ui->Rate->setCurrentIndex(0);
+    ui->Rate->setEnabled(false);
+    ui->range_fine->setEnabled(false);
+    ui->volt_range->setEnabled(false);
+    ui->center_range->setEnabled(false);
+    ui->center->setEnabled(false);
+    ui->reset_range->setEnabled(false);
+
+    ui->time_fine->setEnabled(false);
+    ui->time_range->setEnabled(false);
+    ui->time_center_fine->setEnabled(false);
+    ui->time_center->setEnabled(false);
+    ui->samplereset->setEnabled(false);
+  } else {
+    ui->Rate->setEnabled(true);
+    ui->range_fine->setEnabled(true);
+    ui->volt_range->setEnabled(true);
+    ui->center_range->setEnabled(true);
+    ui->center->setEnabled(true);
+    ui->reset_range->setEnabled(true);
+
+    ui->time_fine->setEnabled(true);
+    ui->time_range->setEnabled(true);
+    ui->time_center_fine->setEnabled(true);
+    ui->time_center->setEnabled(true);
+    ui->samplereset->setEnabled(false);
   }
 
   command.run = 0;

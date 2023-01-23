@@ -90,18 +90,11 @@ struct COMMAND {
   uint8_t kill = 0;
 };
 
-#define SAMPLELEN 126
+#define SAMPLELEN 128
+#define N         1024
 
 struct read_data {
   int32_t len;
   double volt[SAMPLELEN];
-  int64_t t[SAMPLELEN];
+  uint64_t t[SAMPLELEN];
 };
-// union T_DATA {
-//   struct COMMAND *command;
-//   char byte[sizeof(struct COMMAND)];
-// };
-// union R_DATA {
-//   struct read_data *data;
-//   char byte[sizeof(struct read_data)];
-// };

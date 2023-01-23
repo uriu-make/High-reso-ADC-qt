@@ -21,7 +21,6 @@ add_executable(High-reso-ADC
     mainwindow.ui
 )
 
-# find_package(PkgConfig)
 if(UNIX)
     include_directories(/usr/include/qwt)
     link_directories(/usr/lib/)

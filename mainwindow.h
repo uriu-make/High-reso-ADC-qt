@@ -19,6 +19,7 @@
 
 #include <unistd.h>
 #include <iomanip>
+#include <complex>
 
 #include "ADS1256.h"
 
@@ -51,9 +52,9 @@ class MainWindow : public QMainWindow {
 
   static constexpr int _plotDataSize = 100000;
   static constexpr double _gain = 1;
-
-  QVBoxLayout *vLayout;  
-  QHBoxLayout *hLayout;  
+  int measure_mode = 0;
+  QVBoxLayout *vLayout;
+  QHBoxLayout *hLayout;
   int _len;
   int64_t t_0;
 
