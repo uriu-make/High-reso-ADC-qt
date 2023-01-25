@@ -27,14 +27,8 @@ MainWindow::MainWindow(QWidget *parent)
   grid->setPen(QPen(QBrush(QColor::fromRgb(100, 100, 100)), 2.0));
   ui->qwtPlot->replot();
   ui->qwtPlot->show();
-  ui->qwtPlot->setAxisTitle(0, tr("volt"));
-  ui->qwtPlot->setAxisTitle(2, tr("time"));
   ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
 
-  // ui->lcdNumber->setSegmentStyle(QLCDNumber::Flat);
-  // QPalette palette = ui->lcdNumber->palette();
-  // palette.setColor(palette.Light, QColor(255, 255, 255));
-  // ui->lcdNumber->setPalette(palette);
   ui->volt->setText(QString::number(0.0, 'g', 9) + "V");
 
   ui->in_n->setCurrentIndex(8);
@@ -68,20 +62,25 @@ void MainWindow::timerEvent(QTimerEvent *) {
   QByteArray temp;
   if (ui->mode->currentIndex() == 1) {
     struct fft_data fft_read = {0};
-    while ((unsigned int)buffer.size() >= sizeof(fft_read)) {
+    if ((unsigned int)buffer.size() >= sizeof(fft_read)) {
       temp = buffer.mid(0, sizeof(fft_read));
       buffer.remove(0, sizeof(fft_read));
       memcpy(&fft_read, temp.constData(), sizeof(fft_read));
       temp.clear();
+
+      for (int i = 0; i < N; i++) {
+        xData[i] = fft_read.freq_bin * i;
+        yData[i] = std::abs(fft_read.F[i]) / static_cast<double>(N);
+      }
+      ui->label_7->setText("Range");
+      ui->qwtPlot->setAxisTitle(0, tr(""));
+      ui->qwtPlot->setAxisTitle(2, tr(""));
+      // ui->qwtPlot->setAxisAutoScale(QwtPlot::yLeft, true);
+      ui->volt->setText("");
+      ui->qwtPlot->setAxisScale(QwtPlot::xBottom, -10, N);
+      curve->setSamples(xData, yData, N);
+      ui->qwtPlot->replot();
     }
-    for (int i = 0; i < N; i++) {
-      xData[i] = fft_read.freq_bin * i;
-      yData[i] = std::abs(fft_read.F[i]) / static_cast<double>(N);
-    }
-    ui->qwtPlot->setAxisAutoScale(QwtPlot::yLeft, true);
-    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, -10, N);
-    curve->setSamples(xData, yData, N);
-    ui->qwtPlot->replot();
   } else {
     while ((unsigned int)buffer.size() >= sizeof(read_data)) {
       temp = buffer.mid(0, sizeof(read_data));
@@ -116,6 +115,9 @@ void MainWindow::timerEvent(QTimerEvent *) {
     } else {
       ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
     }
+    ui->label_7->setText("Range[V]");
+    ui->qwtPlot->setAxisTitle(0, tr("volt"));
+    ui->qwtPlot->setAxisTitle(2, tr("time"));
     ui->qwtPlot->replot();
     ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
   }
@@ -123,14 +125,20 @@ void MainWindow::timerEvent(QTimerEvent *) {
 }
 
 void MainWindow::change_volt_range(double value) {
-  volt_range_p = center + value;
-  volt_range_n = center - value;
-  range = value;
-  volt_range_p = std::clamp(volt_range_p, -5.0, 5.0);
-  volt_range_n = std::clamp(volt_range_n, -5.0, 5.0);
+  if (ui->mode->currentIndex() == 1) {
+    ui->qwtPlot->setAxisScale(QwtPlot::yLeft, 0, value);
+    ui->qwtPlot->replot();
 
-  ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
-  ui->qwtPlot->replot();
+  } else {
+    volt_range_p = center + value;
+    volt_range_n = center - value;
+    range = value;
+    volt_range_p = std::clamp(volt_range_p, -5.0, 5.0);
+    volt_range_n = std::clamp(volt_range_n, -5.0, 5.0);
+
+    ui->qwtPlot->setAxisScale(QwtPlot::yLeft, volt_range_n, volt_range_p);
+    ui->qwtPlot->replot();
+  }
 }
 
 void MainWindow::change_time_range(int value) {
@@ -171,7 +179,7 @@ void MainWindow::run_measure() {
     ui->Rate->setCurrentIndex(0);
     ui->Rate->setEnabled(false);
     ui->range_fine->setEnabled(false);
-    ui->volt_range->setEnabled(false);
+    // ui->volt_range->setEnabled(false);
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
     ui->reset_range->setEnabled(false);
@@ -210,6 +218,11 @@ void MainWindow::run_measure() {
     ui->run->setText("Stop");
     mutex.lock();
     buffer.clear();
+    if (measure_mode == 1) {
+      ui->qwtPlot->setAxisScale(QwtPlot::yLeft, 0, ui->volt_range->value());
+    } else {
+      range_reset();
+    }
     for (int i = 0; i < _plotDataSize; i++) {
       xData[i] = 0.0;
       xData_buf[i] = 0.0;
@@ -321,18 +334,18 @@ void MainWindow::save_as() {
       filestream.setCodec("UTF-8");
       filestream.setRealNumberNotation(QTextStream::ScientificNotation);
       if (measure_mode == 0) {
-        filestream << "Volt[v],Time[s]" << Qt::endl;
+        filestream << "Time[s],Volt[v]" << Qt::endl;
         mutex.lock();
         for (int i = 0; i < _plotDataSize; i++) {
-          filestream << QString::number(yData[i], 'g', 9) << "," << QString::number(xData[i], 'g', 9) << Qt::endl;
+          filestream << "," << QString::number(xData[i], 'g', 9) << QString::number(yData[i], 'g', 9) << Qt::endl;
         }
         mutex.unlock();
         filestream.flush();
       } else if (measure_mode == 1) {
-        filestream << "freq,num" << Qt::endl;
+        filestream << "freq,value" << Qt::endl;
         mutex.lock();
         for (int i = 0; i < N; i++) {
-          filestream << QString::number(yData[i], 'g', 9) << "," << QString::number(xData[i], 'g', 9) << Qt::endl;
+          filestream << "," << QString::number(xData[i], 'g', 9) << QString::number(yData[i], 'g', 9) << Qt::endl;
         }
         mutex.unlock();
         filestream.flush();
@@ -400,7 +413,7 @@ void MainWindow::config() {
     ui->Rate->setCurrentIndex(0);
     ui->Rate->setEnabled(false);
     ui->range_fine->setEnabled(false);
-    ui->volt_range->setEnabled(false);
+    // ui->volt_range->setEnabled(false);
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
     ui->reset_range->setEnabled(false);
@@ -422,7 +435,7 @@ void MainWindow::config() {
     ui->time_range->setEnabled(true);
     ui->time_center_fine->setEnabled(true);
     ui->time_center->setEnabled(true);
-    ui->samplereset->setEnabled(false);
+    ui->samplereset->setEnabled(true);
   }
 
   command.run = 0;
