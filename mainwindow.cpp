@@ -67,20 +67,19 @@ void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
   QByteArray temp;
   if (ui->mode->currentIndex() == 1) {
-    std::complex<double> F[N];
-    while ((unsigned int)buffer.size() >= sizeof(read_data)) {
-      temp = buffer.mid(0, sizeof(F));
-      buffer.remove(0, sizeof(F));
-      memcpy(F, temp.constData(), sizeof(F));
+    struct fft_data fft_read = {0};
+    while ((unsigned int)buffer.size() >= sizeof(fft_read)) {
+      temp = buffer.mid(0, sizeof(fft_read));
+      buffer.remove(0, sizeof(fft_read));
+      memcpy(&fft_read, temp.constData(), sizeof(fft_read));
       temp.clear();
     }
-
     for (int i = 0; i < N; i++) {
-      xData[i] = i;
-      yData[i] = std::abs(F[i]) / static_cast<double>(N);
+      xData[i] = fft_read.freq_bin * i;
+      yData[i] = std::abs(fft_read.F[i]) / static_cast<double>(N);
     }
-    ui->qwtPlot->setAxisAutoScale(QwtPlot::xTop, true);
-    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, 0, N);
+    ui->qwtPlot->setAxisAutoScale(QwtPlot::yLeft, true);
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, -10, N);
     curve->setSamples(xData, yData, N);
     ui->qwtPlot->replot();
   } else {
@@ -194,7 +193,7 @@ void MainWindow::run_measure() {
     ui->time_range->setEnabled(true);
     ui->time_center_fine->setEnabled(true);
     ui->time_center->setEnabled(true);
-    ui->samplereset->setEnabled(false);
+    ui->samplereset->setEnabled(true);
   }
   if (ui->run->text().compare("Run", Qt::CaseSensitive) == 0) {
     MainWindow::config();

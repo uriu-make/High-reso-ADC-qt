@@ -1,7 +1,7 @@
 #include <stdint.h>
 #pragma once
 
-//サンプリングレート
+// サンプリングレート
 #define DATARATE_30000 0b11110000
 #define DATARATE_15000 0b11100000
 #define DATARATE_7500  0b11010000
@@ -97,4 +97,9 @@ struct read_data {
   int32_t len;
   double volt[SAMPLELEN];
   uint64_t t[SAMPLELEN];
+};
+
+struct fft_data {
+  double freq_bin;
+  std::complex<double> F[N];
 };
