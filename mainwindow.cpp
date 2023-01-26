@@ -61,7 +61,6 @@ void MainWindow::timerEvent(QTimerEvent *) {
   mutex.lock();
   QByteArray temp;
   if (ui->mode->currentIndex() == 1) {
-    struct fft_data fft_read = {0};
     if ((unsigned int)buffer.size() >= sizeof(fft_read)) {
       temp = buffer.mid(0, sizeof(fft_read));
       buffer.remove(0, sizeof(fft_read));
@@ -77,7 +76,7 @@ void MainWindow::timerEvent(QTimerEvent *) {
       ui->qwtPlot->setAxisTitle(2, tr(""));
       // ui->qwtPlot->setAxisAutoScale(QwtPlot::yLeft, true);
       ui->volt->setText("");
-      ui->qwtPlot->setAxisScale(QwtPlot::xBottom, -10, N);
+      ui->qwtPlot->setAxisScale(QwtPlot::xBottom, -10, N / 2);
       curve->setSamples(xData, yData, N);
       ui->qwtPlot->replot();
     }
@@ -337,7 +336,7 @@ void MainWindow::save_as() {
         filestream << "Time[s],Volt[v]" << Qt::endl;
         mutex.lock();
         for (int i = 0; i < _plotDataSize; i++) {
-          filestream << "," << QString::number(xData[i], 'g', 9) << QString::number(yData[i], 'g', 9) << Qt::endl;
+          filestream << QString::number(xData[i], 'g', 9) << "," << QString::number(yData[i], 'g', 9) << Qt::endl;
         }
         mutex.unlock();
         filestream.flush();
@@ -345,7 +344,14 @@ void MainWindow::save_as() {
         filestream << "freq,value" << Qt::endl;
         mutex.lock();
         for (int i = 0; i < N; i++) {
-          filestream << "," << QString::number(xData[i], 'g', 9) << QString::number(yData[i], 'g', 9) << Qt::endl;
+          filestream << QString::number(xData[i], 'g', 9);
+          filestream << "," << QString::number(fft_read.F[i].real(), 'g', 9);
+          if (fft_read.F[i].imag()
+          >= 0) {
+            filestream << "+" << QString::number(fft_read.F[i].imag(), 'g', 9) << "j" << Qt::endl;
+          } else {
+            filestream << QString::number(fft_read.F[i].imag(), 'g', 9) << "j" << Qt::endl;
+          }
         }
         mutex.unlock();
         filestream.flush();

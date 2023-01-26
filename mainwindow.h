@@ -49,7 +49,7 @@ class MainWindow : public QMainWindow {
   QTcpSocket *sock;
 
   void timerEvent(QTimerEvent *);
-
+  struct fft_data fft_read = {0};
   static constexpr int _plotDataSize = 100000;
   static constexpr double _gain = 1;
   int measure_mode = 0;
