@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
 
   connect(ui->Connect, SIGNAL(clicked()), this, SLOT(connect_socket()));
   connect(ui->save, SIGNAL(clicked()), this, SLOT(save_as()));
+  connect(ui->saveall, SIGNAL(clicked()), this, SLOT(save_all()));
   connect(ui->config, SIGNAL(clicked()), this, SLOT(config()));
   connect(this->sock, SIGNAL(readyRead()), this, SLOT(read_task()));
 }
@@ -74,7 +75,6 @@ void MainWindow::timerEvent(QTimerEvent *) {
       ui->label_7->setText("Range");
       ui->qwtPlot->setAxisTitle(0, tr(""));
       ui->qwtPlot->setAxisTitle(2, tr(""));
-      // ui->qwtPlot->setAxisAutoScale(QwtPlot::yLeft, true);
       ui->volt->setText("");
       ui->qwtPlot->setAxisScale(QwtPlot::xBottom, -10, N / 2);
       curve->setSamples(xData, yData, N);
@@ -118,7 +118,7 @@ void MainWindow::timerEvent(QTimerEvent *) {
     ui->qwtPlot->setAxisTitle(0, tr("volt"));
     ui->qwtPlot->setAxisTitle(2, tr("time"));
     ui->qwtPlot->replot();
-    ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
+    ui->volt->setText(QString::number(yData[std::clamp(t_center, 0, _plotDataSize - 1)], 'g', 9) + "V");
   }
   mutex.unlock();
 }
@@ -167,8 +167,6 @@ void MainWindow::change_time_center(int value) {
   t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
-  // ui->lcdNumber->display(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)]);
-  // ui->lcdNumber->show();
   ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
 }
 
@@ -178,7 +176,6 @@ void MainWindow::run_measure() {
     ui->Rate->setCurrentIndex(0);
     ui->Rate->setEnabled(false);
     ui->range_fine->setEnabled(false);
-    // ui->volt_range->setEnabled(false);
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
     ui->reset_range->setEnabled(false);
@@ -205,6 +202,7 @@ void MainWindow::run_measure() {
   if (ui->run->text().compare("Run", Qt::CaseSensitive) == 0) {
     MainWindow::config();
     ui->save->setEnabled(false);
+    ui->saveall->setEnabled(false);
     ui->config->setEnabled(false);
     ui->Connect->setEnabled(false);
     ui->Rate->setEnabled(false);
@@ -218,9 +216,10 @@ void MainWindow::run_measure() {
     mutex.lock();
     buffer.clear();
     if (measure_mode == 1) {
+      ui->range_fine->setCheckState(Qt::CheckState::Unchecked);
       ui->qwtPlot->setAxisScale(QwtPlot::yLeft, 0, ui->volt_range->value());
     } else {
-      range_reset();
+      // range_reset();
     }
     for (int i = 0; i < _plotDataSize; i++) {
       xData[i] = 0.0;
@@ -239,10 +238,7 @@ void MainWindow::run_measure() {
     timerID = this->startTimer(15);
   } else {
     ui->save->setEnabled(true);
-    ui->config->setEnabled(true);
-    ui->Connect->setEnabled(true);
-
-    ui->save->setEnabled(true);
+    ui->saveall->setEnabled(true);
     ui->config->setEnabled(true);
     ui->Connect->setEnabled(true);
     ui->Rate->setEnabled(true);
@@ -335,6 +331,50 @@ void MainWindow::save_as() {
       if (measure_mode == 0) {
         filestream << "Time[s],Volt[v]" << Qt::endl;
         mutex.lock();
+        for (int i = t_range_n; i < t_range_p; i++) {
+          filestream << QString::number(xData[i], 'g', 9) << "," << QString::number(yData[i], 'g', 9) << Qt::endl;
+        }
+        mutex.unlock();
+        filestream.flush();
+      } else if (measure_mode == 1) {
+        filestream << "freq,value" << Qt::endl;
+        mutex.lock();
+        for (int i = 0; i < N; i++) {
+          filestream << QString::number(xData[i], 'g', 9);
+          filestream << "," << QString::number(fft_read.F[i].real(), 'g', 9);
+          if (fft_read.F[i].imag() >= 0) {
+            filestream << "+" << QString::number(fft_read.F[i].imag(), 'g', 9) << "j" << Qt::endl;
+          } else {
+            filestream << QString::number(fft_read.F[i].imag(), 'g', 9) << "j" << Qt::endl;
+          }
+        }
+        mutex.unlock();
+        filestream.flush();
+      }
+
+      file.close();
+    }
+  }
+}
+
+void MainWindow::save_all() {
+  QString filters("CSV files (*.csv);;All files(*.*)");
+  QString defaultFilter("CSV files (*.csv)");
+  QString filepath;
+  QDateTime date = QDateTime::currentDateTime();
+  QFileDialog dialog;
+  QString path = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+
+  filepath = dialog.getSaveFileName(0, tr("名前を付けて保存"), path + "/" + "plot-" + date.toString("yyyy-MM-dd-HH-mm") + ".csv", filters, &defaultFilter);
+  if (filepath.size() > 0) {
+    QFile file(filepath);
+    if (file.open(QFile::ReadWrite)) {
+      QTextStream filestream(&file);
+      filestream.setCodec("UTF-8");
+      filestream.setRealNumberNotation(QTextStream::ScientificNotation);
+      if (measure_mode == 0) {
+        filestream << "Time[s],Volt[v]" << Qt::endl;
+        mutex.lock();
         for (int i = 0; i < _plotDataSize; i++) {
           filestream << QString::number(xData[i], 'g', 9) << "," << QString::number(yData[i], 'g', 9) << Qt::endl;
         }
@@ -346,8 +386,7 @@ void MainWindow::save_as() {
         for (int i = 0; i < N; i++) {
           filestream << QString::number(xData[i], 'g', 9);
           filestream << "," << QString::number(fft_read.F[i].real(), 'g', 9);
-          if (fft_read.F[i].imag()
-          >= 0) {
+          if (fft_read.F[i].imag() >= 0) {
             filestream << "+" << QString::number(fft_read.F[i].imag(), 'g', 9) << "j" << Qt::endl;
           } else {
             filestream << QString::number(fft_read.F[i].imag(), 'g', 9) << "j" << Qt::endl;
@@ -387,6 +426,7 @@ void MainWindow::connect_socket() {
       ui->config->setEnabled(false);
       ui->run->setEnabled(false);
       ui->save->setEnabled(false);
+      ui->saveall->setEnabled(false);
     }
   }
 }

@@ -93,6 +93,7 @@ class MainWindow : public QMainWindow {
 
   void connect_socket();
   void save_as();
+  void save_all();
   void config();
 
   void read_task();
