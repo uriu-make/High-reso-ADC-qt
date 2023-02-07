@@ -165,7 +165,7 @@ void MainWindow::change_time_range(int value) {
   t_center = std::clamp(t_center, 0, _plotDataSize - 1);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
-  ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
+  ui->volt->setText(QString::number(average, 'g', 9) + "V");
 }
 
 void MainWindow::change_volt_center(double value) {
