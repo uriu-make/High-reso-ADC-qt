@@ -105,9 +105,16 @@ void MainWindow::timerEvent(QTimerEvent *) {
     } else {
       t_0 = xData_buf[_plotDataSize / 2];
     }
-    for (int i = 0; i < _plotDataSize; i++) {
+    double average = 0.0;
+    int ave_count = 0;
+    for (int i = writepoint; i < _plotDataSize; i++) {
       xData[i] = (xData_buf[i] - t_0) / 1000000.0;
+      if (i >= t_range_n && i <= t_range_p) {
+        average += yData[i];
+        ave_count++;
+      }
     }
+    average = average / ave_count;
     curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
     if (writepoint > t_range_n) {
       ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[t_range_p]);
@@ -118,7 +125,7 @@ void MainWindow::timerEvent(QTimerEvent *) {
     ui->qwtPlot->setAxisTitle(0, tr("volt"));
     ui->qwtPlot->setAxisTitle(2, tr("time"));
     ui->qwtPlot->replot();
-    ui->volt->setText(QString::number(yData[std::clamp(t_center, 0, _plotDataSize - 1)], 'g', 9) + "V");
+    ui->volt->setText(QString::number(average, 'g', 9) + "V");
   }
   mutex.unlock();
 }
@@ -144,7 +151,15 @@ void MainWindow::change_time_range(int value) {
   t_range = value;
   t_range_p = std::clamp(t_center + t_range, 0, _plotDataSize - 1);
   t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
-
+  double average = 0.0;
+  int ave_count = 0;
+  for (int i = writepoint; i < _plotDataSize; i++) {
+    if (i >= t_range_n && i <= t_range_p) {
+      average += yData[i];
+      ave_count++;
+    }
+  }
+  average = average / ave_count;
   t_center = std::clamp(t_center, 0, _plotDataSize - 1);
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
@@ -165,9 +180,18 @@ void MainWindow::change_time_center(int value) {
   t_center = std::clamp(_plotDataSize / 2 + value, 0, _plotDataSize);
   t_range_p = std::clamp(t_center + t_range, 0, _plotDataSize - 1);
   t_range_n = std::clamp(t_center - t_range, 0, _plotDataSize - 1);
+  double average = 0.0;
+  int ave_count = 0;
+  for (int i = writepoint; i < _plotDataSize; i++) {
+    if (i >= t_range_n && i <= t_range_p) {
+      average += yData[i];
+      ave_count++;
+    }
+  }
+  average = average / ave_count;
   ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
   ui->qwtPlot->replot();
-  ui->volt->setText(QString::number(yData[std::clamp(t_center - 1, 0, _plotDataSize - 1)], 'g', 9) + "V");
+  ui->volt->setText(QString::number(average, 'g', 9) + "V");
 }
 
 void MainWindow::run_measure() {
@@ -175,7 +199,7 @@ void MainWindow::run_measure() {
   if (measure_mode == 1) {
     ui->Rate->setCurrentIndex(0);
     ui->Rate->setEnabled(false);
-    ui->range_fine->setEnabled(false);
+    // ui->range_fine->setEnabled(false);
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
     ui->reset_range->setEnabled(false);
@@ -216,10 +240,7 @@ void MainWindow::run_measure() {
     mutex.lock();
     buffer.clear();
     if (measure_mode == 1) {
-      ui->range_fine->setCheckState(Qt::CheckState::Unchecked);
       ui->qwtPlot->setAxisScale(QwtPlot::yLeft, 0, ui->volt_range->value());
-    } else {
-      // range_reset();
     }
     for (int i = 0; i < _plotDataSize; i++) {
       xData[i] = 0.0;
@@ -458,7 +479,7 @@ void MainWindow::config() {
   if (mode == 1) {
     ui->Rate->setCurrentIndex(0);
     ui->Rate->setEnabled(false);
-    ui->range_fine->setEnabled(false);
+    // ui->range_fine->setEnabled(false);
     // ui->volt_range->setEnabled(false);
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
