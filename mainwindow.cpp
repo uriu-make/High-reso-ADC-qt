@@ -458,28 +458,7 @@ void MainWindow::connect_socket() {
 }
 
 void MainWindow::config() {
-  int rate = ui->Rate->currentIndex();
-  int pga = ui->PGA->currentIndex();
-  int pin = ui->in_p->currentIndex();
-  int nin = ui->in_n->currentIndex();
   int mode = ui->mode->currentIndex();
-
-  command.rate = rate_list[rate];
-  command.gain = gain_list[pga];
-  command.positive = ain_list[pin];
-  command.negative = ain_list[nin];
-  command.mode = mode_list[mode];
-  if (ui->analogbuffer->isChecked()) {
-    command.buf = 1;
-  } else {
-    command.buf = 0;
-  }
-
-  if (ui->sync->isChecked()) {
-    command.sync = 1;
-  } else {
-    command.sync = 0;
-  }
 
   if (mode == 1) {
     ui->Rate->setCurrentIndex(0);
@@ -487,6 +466,7 @@ void MainWindow::config() {
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
     ui->reset_range->setEnabled(false);
+    ui->sync->setChecked(false);
 
     ui->time_fine->setEnabled(false);
     ui->time_range->setEnabled(false);
@@ -508,6 +488,27 @@ void MainWindow::config() {
     ui->time_center->setEnabled(true);
     ui->samplereset->setEnabled(true);
     ui->set_t0->setEnabled(true);
+  }
+  int rate = ui->Rate->currentIndex();
+  int pga = ui->PGA->currentIndex();
+  int pin = ui->in_p->currentIndex();
+  int nin = ui->in_n->currentIndex();
+
+  command.rate = rate_list[rate];
+  command.gain = gain_list[pga];
+  command.positive = ain_list[pin];
+  command.negative = ain_list[nin];
+  command.mode = mode_list[mode];
+  if (ui->analogbuffer->isChecked()) {
+    command.buf = 1;
+  } else {
+    command.buf = 0;
+  }
+
+  if (ui->sync->isChecked()) {
+    command.sync = 1;
+  } else {
+    command.sync = 0;
   }
 
   command.run = 0;
