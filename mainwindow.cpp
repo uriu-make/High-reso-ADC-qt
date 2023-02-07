@@ -51,6 +51,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(ui->save, SIGNAL(clicked()), this, SLOT(save_as()));
   connect(ui->saveall, SIGNAL(clicked()), this, SLOT(save_all()));
   connect(ui->config, SIGNAL(clicked()), this, SLOT(config()));
+  connect(ui->set_t0, SIGNAL(clicked()), this, SLOT(change_t0()));
+
   connect(this->sock, SIGNAL(readyRead()), this, SLOT(read_task()));
 }
 
@@ -199,7 +201,6 @@ void MainWindow::run_measure() {
   if (measure_mode == 1) {
     ui->Rate->setCurrentIndex(0);
     ui->Rate->setEnabled(false);
-    // ui->range_fine->setEnabled(false);
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
     ui->reset_range->setEnabled(false);
@@ -209,6 +210,7 @@ void MainWindow::run_measure() {
     ui->time_center_fine->setEnabled(false);
     ui->time_center->setEnabled(false);
     ui->samplereset->setEnabled(false);
+    ui->set_t0->setEnabled(false);
   } else {
     ui->Rate->setEnabled(true);
     ui->range_fine->setEnabled(true);
@@ -222,6 +224,7 @@ void MainWindow::run_measure() {
     ui->time_center_fine->setEnabled(true);
     ui->time_center->setEnabled(true);
     ui->samplereset->setEnabled(true);
+    ui->set_t0->setEnabled(true);
   }
   if (ui->run->text().compare("Run", Qt::CaseSensitive) == 0) {
     MainWindow::config();
@@ -236,6 +239,7 @@ void MainWindow::run_measure() {
     ui->analogbuffer->setEnabled(false);
     ui->sync->setEnabled(false);
     ui->mode->setEnabled(false);
+    ui->set_t0->setEnabled(false);
     ui->run->setText("Stop");
     mutex.lock();
     buffer.clear();
@@ -269,6 +273,7 @@ void MainWindow::run_measure() {
     ui->analogbuffer->setEnabled(true);
     ui->sync->setEnabled(true);
     ui->mode->setEnabled(true);
+    ui->set_t0->setEnabled(true);
 
     command.run = 0;
     this->sock->write((char *)(&command), sizeof(command));
@@ -479,8 +484,6 @@ void MainWindow::config() {
   if (mode == 1) {
     ui->Rate->setCurrentIndex(0);
     ui->Rate->setEnabled(false);
-    // ui->range_fine->setEnabled(false);
-    // ui->volt_range->setEnabled(false);
     ui->center_range->setEnabled(false);
     ui->center->setEnabled(false);
     ui->reset_range->setEnabled(false);
@@ -490,6 +493,7 @@ void MainWindow::config() {
     ui->time_center_fine->setEnabled(false);
     ui->time_center->setEnabled(false);
     ui->samplereset->setEnabled(false);
+    ui->set_t0->setEnabled(false);
   } else {
     ui->Rate->setEnabled(true);
     ui->range_fine->setEnabled(true);
@@ -503,6 +507,7 @@ void MainWindow::config() {
     ui->time_center_fine->setEnabled(true);
     ui->time_center->setEnabled(true);
     ui->samplereset->setEnabled(true);
+    ui->set_t0->setEnabled(true);
   }
 
   command.run = 0;
@@ -529,4 +534,18 @@ void MainWindow::read_task() {
     buffer.append(this->sock->readAll());
     this->mutex.unlock();
   }
+}
+
+void MainWindow::change_t0() {
+  t_0 = xData_buf[t_center];
+  for (int i = writepoint; i < _plotDataSize; i++) {
+    xData[i] = (xData_buf[i] - t_0) / 1000000.0;
+  }
+  curve->setSamples(&xData[writepoint], &yData[writepoint], _plotDataSize - writepoint);
+  if (writepoint > t_range_n) {
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[writepoint], xData[t_range_p]);
+  } else {
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom, xData[t_range_n], xData[t_range_p]);
+  }
+  ui->qwtPlot->replot();
 }

@@ -95,6 +95,7 @@ class MainWindow : public QMainWindow {
   void save_as();
   void save_all();
   void config();
+  void change_t0();
 
   void read_task();
 };

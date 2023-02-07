@@ -932,6 +932,13 @@
           </layout>
          </item>
          <item>
+          <widget class="QPushButton" name="set_t0">
+           <property name="text">
+            <string>Set t_0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QPushButton" name="samplereset">
            <property name="text">
             <string>Sample Reset</string>
