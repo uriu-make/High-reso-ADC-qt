@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
   volt_range_n = -5.0;
   center = 0;
   range = 5;
-  t_range = 100;
+  t_range = _plotDataSize / 2;
   t_center = _plotDataSize / 2;
   t_range_p = _plotDataSize - 1;
   t_range_n = 0;
