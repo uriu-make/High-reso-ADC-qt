@@ -96,8 +96,8 @@ void MainWindow::timerEvent(QTimerEvent *) {
       l_sum = std::clamp(l_sum + data.len, 0, _plotDataSize - 1);
 
       writepoint = _plotDataSize - l_sum;
-      memcpy(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
-      memcpy(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
+      memmove(yData, &yData[data.len], sizeof(double) * (_plotDataSize - data.len));
+      memmove(xData_buf, &xData_buf[data.len], sizeof(int64_t) * (_plotDataSize - data.len));
       memcpy(&yData[_plotDataSize - data.len], data.volt, sizeof(double) * data.len);
       memcpy(&xData_buf[_plotDataSize - data.len], data.t, sizeof(int64_t) * data.len);
     }
@@ -109,7 +109,7 @@ void MainWindow::timerEvent(QTimerEvent *) {
     }
     double average = 0.0;
     int ave_count = 0;
-    for (int i = writepoint; i < _plotDataSize; i++) {
+    for (int i = writepoint - 1; i < _plotDataSize; i++) {
       xData[i] = (xData_buf[i] - t_0) / 1000000.0;
       if (i >= t_range_n && i <= t_range_p) {
         average += yData[i];
